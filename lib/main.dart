@@ -1,7 +1,9 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'firebase_options.dart';
+import 'viewmodels/auth_viewmodel.dart';
 import 'views/splash_screen.dart';
 
 Future<void> main() async {
@@ -11,7 +13,12 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  runApp(const ProjexaApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => AuthViewModel(),
+      child: const ProjexaApp(),
+    ),
+  );
 }
 
 class ProjexaApp extends StatelessWidget {

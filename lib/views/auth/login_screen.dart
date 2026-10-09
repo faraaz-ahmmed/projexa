@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../viewmodels/auth_viewmodel.dart';
+import '../dashboard/dashboard_screen.dart';
 import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -15,7 +18,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final passwordController = TextEditingController();
 
   bool hidePassword = true;
-  bool rememberMe = false;
 
   @override
   void dispose() {
@@ -24,18 +26,37 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void login() {
+  Future<void> login() async {
+    final auth = context.read<AuthViewModel>();
+
+    if (auth.isLoading) return;
     if (!formKey.currentState!.validate()) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Form valid. Firebase login will be connected next.'),
-      ),
+    final success = await auth.login(
+      emailController.text,
+      passwordController.text,
     );
+
+    if (!mounted) return;
+
+    if (success) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => const DashboardScreen(),
+        ),
+        (_) => false,
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(auth.error ?? 'Login failed')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthViewModel>();
+
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -81,6 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextFormField(
                       controller: emailController,
                       keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
                       autofillHints: const [AutofillHints.email],
                       decoration: const InputDecoration(
                         labelText: 'Email address',
@@ -89,6 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       validator: (value) {
                         final email = value?.trim() ?? '';
+
                         if (email.isEmpty) return 'Enter your email';
                         if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
                             .hasMatch(email)) {
@@ -101,6 +124,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextFormField(
                       controller: passwordController,
                       obscureText: hidePassword,
+                      textInputAction: TextInputAction.done,
                       autofillHints: const [AutofillHints.password],
                       decoration: InputDecoration(
                         labelText: 'Password',
@@ -127,40 +151,34 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                       onFieldSubmitted: (_) => login(),
                     ),
-                    const SizedBox(height: 8),
-                    CheckboxListTile(
-                      value: rememberMe,
-                      onChanged: (value) {
-                        setState(() {
-                          rememberMe = value ?? false;
-                        });
-                      },
-                      title: const Text('Remember me'),
-                      controlAffinity: ListTileControlAffinity.leading,
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
                     FilledButton(
-                      onPressed: login,
+                      onPressed: auth.isLoading ? null : login,
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text('Login'),
+                      child: Text(
+                        auth.isLoading ? 'Please wait...' : 'Login',
+                      ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
                     TextButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const SignUpScreen(),
-                          ),
-                        );
-                      },
-                      child: const Text("Don't have an account? Sign Up"),
-                    ), 
+                      onPressed: auth.isLoading
+                          ? null
+                          : () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => const SignUpScreen(),
+                                ),
+                              );
+                            },
+                      child: const Text(
+                        "Don't have an account? Sign Up",
+                      ),
+                    ),
                   ],
                 ),
               ),

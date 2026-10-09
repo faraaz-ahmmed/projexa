@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../viewmodels/auth_viewmodel.dart';
+import '../dashboard/dashboard_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -26,18 +30,38 @@ class _SignUpScreenState extends State<SignUpScreen> {
     super.dispose();
   }
 
-  void signUp() {
+  Future<void> signUp() async {
+    final auth = context.read<AuthViewModel>();
+
+    if (auth.isLoading) return;
     if (!formKey.currentState!.validate()) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Form valid. Account creation is not connected yet.'),
-      ),
+    final success = await auth.signUp(
+      nameController.text,
+      emailController.text,
+      passwordController.text,
     );
+
+    if (!mounted) return;
+
+    if (success) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => const DashboardScreen(),
+        ),
+        (_) => false,
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(auth.error ?? 'Sign up failed')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthViewModel>();
+
     return Scaffold(
       appBar: AppBar(),
       body: SafeArea(
@@ -84,6 +108,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     TextFormField(
                       controller: nameController,
                       textCapitalization: TextCapitalization.words,
+                      textInputAction: TextInputAction.next,
                       autofillHints: const [AutofillHints.name],
                       decoration: const InputDecoration(
                         labelText: 'Full name',
@@ -101,6 +126,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     TextFormField(
                       controller: emailController,
                       keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
                       autofillHints: const [AutofillHints.email],
                       decoration: const InputDecoration(
                         labelText: 'Email address',
@@ -109,6 +135,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       validator: (value) {
                         final email = value?.trim() ?? '';
+
                         if (email.isEmpty) return 'Enter your email';
                         if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
                             .hasMatch(email)) {
@@ -121,6 +148,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     TextFormField(
                       controller: passwordController,
                       obscureText: hidePassword,
+                      textInputAction: TextInputAction.next,
                       autofillHints: const [AutofillHints.newPassword],
                       decoration: InputDecoration(
                         labelText: 'Password',
@@ -153,6 +181,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     TextFormField(
                       controller: confirmController,
                       obscureText: hideConfirmPassword,
+                      textInputAction: TextInputAction.done,
                       decoration: InputDecoration(
                         labelText: 'Confirm password',
                         prefixIcon: const Icon(Icons.lock_outline),
@@ -183,19 +212,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                     const SizedBox(height: 24),
                     FilledButton(
-                      onPressed: signUp,
+                      onPressed: auth.isLoading ? null : signUp,
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text('Sign Up'),
+                      child: Text(
+                        auth.isLoading ? 'Please wait...' : 'Sign Up',
+                      ),
                     ),
                     const SizedBox(height: 16),
                     TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Already have an account? Login'),
+                      onPressed: auth.isLoading
+                          ? null
+                          : () => Navigator.of(context).pop(),
+                      child: const Text(
+                        'Already have an account? Login',
+                      ),
                     ),
                   ],
                 ),
