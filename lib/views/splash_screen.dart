@@ -1,7 +1,10 @@
 import 'dart:async';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'auth/login_screen.dart';
+import 'dashboard/dashboard_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -11,27 +14,29 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  late final Timer timer;
-
   @override
   void initState() {
     super.initState();
-
-    timer = Timer(const Duration(seconds: 2), () {
-      if (!mounted) return;
-
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => const LoginScreen(),
-        ),
-      );
-    });
+    openNextScreen();
   }
 
-  @override
-  void dispose() {
-    timer.cancel();
-    super.dispose();
+  Future<void> openNextScreen() async {
+    final results = await Future.wait<Object?>([
+      FirebaseAuth.instance.authStateChanges().first,
+      Future<void>.delayed(const Duration(seconds: 2)),
+    ]);
+
+    if (!mounted) return;
+
+    final user = results.first as User?;
+
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => user == null
+            ? const LoginScreen()
+            : const DashboardScreen(),
+      ),
+    );
   }
 
   @override

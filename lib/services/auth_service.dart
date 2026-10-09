@@ -23,5 +23,11 @@ class AuthService {
     await result.user!.updateDisplayName(name.trim());
   }
 
+  Future<void> resetPassword(String email) async {
+    await _auth.sendPasswordResetEmail(
+      email: email.trim(),
+    );
+  }
+
   Future<void> logout() => _auth.signOut();
 }

@@ -14,7 +14,7 @@ Future<void> main() async {
   );
 
   runApp(
-    ChangeNotifierProvider(
+    ChangeNotifierProvider<AuthViewModel>(
       create: (_) => AuthViewModel(),
       child: const ProjexaApp(),
     ),

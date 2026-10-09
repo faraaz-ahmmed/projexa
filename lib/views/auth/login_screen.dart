@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../viewmodels/auth_viewmodel.dart';
 import '../dashboard/dashboard_screen.dart';
+import 'forgot_password_screen.dart';
 import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -31,6 +32,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (auth.isLoading) return;
     if (!formKey.currentState!.validate()) return;
+
+    FocusScope.of(context).unfocus();
 
     final success = await auth.login(
       emailController.text,
@@ -151,7 +154,23 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                       onFieldSubmitted: (_) => login(),
                     ),
-                    const SizedBox(height: 24),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: auth.isLoading
+                            ? null
+                            : () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        const ForgotPasswordScreen(),
+                                  ),
+                                );
+                              },
+                        child: const Text('Forgot password?'),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
                     FilledButton(
                       onPressed: auth.isLoading ? null : login,
                       style: FilledButton.styleFrom(

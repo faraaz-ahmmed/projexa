@@ -10,6 +10,8 @@ class AuthViewModel extends ChangeNotifier {
   String? error;
 
   Future<bool> login(String email, String password) async {
+    if (isLoading) return false;
+
     isLoading = true;
     error = null;
     notifyListeners();
@@ -34,6 +36,8 @@ class AuthViewModel extends ChangeNotifier {
     String email,
     String password,
   ) async {
+    if (isLoading) return false;
+
     isLoading = true;
     error = null;
     notifyListeners();
@@ -46,6 +50,47 @@ class AuthViewModel extends ChangeNotifier {
       return false;
     } catch (_) {
       error = 'Something went wrong. Please try again.';
+      return false;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> resetPassword(String email) async {
+    if (isLoading) return false;
+
+    isLoading = true;
+    error = null;
+    notifyListeners();
+
+    try {
+      await _service.resetPassword(email);
+      return true;
+    } on FirebaseAuthException catch (e) {
+      error = e.message ?? 'Could not send reset email.';
+      return false;
+    } catch (_) {
+      error = 'Something went wrong. Please try again.';
+      return false;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> logout() async {
+    if (isLoading) return false;
+
+    isLoading = true;
+    error = null;
+    notifyListeners();
+
+    try {
+      await _service.logout();
+      return true;
+    } catch (_) {
+      error = 'Logout failed. Please try again.';
       return false;
     } finally {
       isLoading = false;
