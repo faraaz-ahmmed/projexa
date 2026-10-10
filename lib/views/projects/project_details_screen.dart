@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -20,39 +21,19 @@ class ProjectDetailsScreen extends StatefulWidget {
 }
 
 class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
-  // Progress state section start
-  late double progress;
-  late double savedProgress;
+  // Live project section start
+  late final Stream<DocumentSnapshot<Map<String, dynamic>>> projectStream;
 
   @override
   void initState() {
     super.initState();
-    progress = widget.project.progress.clamp(0.0, 1.0);
-    savedProgress = progress;
+
+    projectStream = FirebaseFirestore.instance
+        .collection('projects')
+        .doc(widget.project.id)
+        .snapshots();
   }
-  // Progress state section end
-
-  // Progress save section start
-  Future<void> saveProgress() async {
-    final vm = context.read<ProjectViewModel>();
-
-    final success = await vm.updateProgress(widget.project.id, progress);
-
-    if (!mounted) return;
-
-    if (success) {
-      setState(() => savedProgress = progress);
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          success ? 'Progress updated' : vm.error ?? 'Update failed',
-        ),
-      ),
-    );
-  }
-  // Progress save section end
+  // Live project section end
 
   // Project delete section start
   Future<void> deleteProject() async {
@@ -63,8 +44,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
       builder: (dialogContext) => AlertDialog(
         title: const Text('Delete project?'),
         content: const Text(
-          'Project delete karne se uski task subcollection automatically '
-          'delete nahi hoti. Filhaal tasks pehle delete karein.',
+          'Please delete all tasks before deleting this project.',
         ),
         actions: [
           TextButton(
@@ -81,15 +61,41 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
 
     if (!mounted || confirmed != true) return;
 
-    final success = await vm.deleteProject(widget.project.id);
+    try {
+      final tasks = await FirebaseFirestore.instance
+          .collection('projects')
+          .doc(widget.project.id)
+          .collection('tasks')
+          .limit(1)
+          .get(const GetOptions(source: Source.server));
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    if (success) {
-      Navigator.of(context).pop();
-    } else {
+      if (tasks.docs.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Open Tasks and delete the tasks first.'),
+          ),
+        );
+        return;
+      }
+
+      final success = await vm.deleteProject(widget.project.id);
+
+      if (!mounted) return;
+
+      if (success) {
+        Navigator.of(context).pop();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(vm.error ?? 'Delete failed')),
+        );
+      }
+    } catch (_) {
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(vm.error ?? 'Delete failed')),
+        const SnackBar(content: Text('Could not delete project. Try again.')),
       );
     }
   }
@@ -98,15 +104,6 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<ProjectViewModel>();
-    final project = widget.project;
-    final isOwner =
-        FirebaseAuth.instance.currentUser?.uid == project.ownerId;
-
-    final status = savedProgress == 1.0
-        ? 'Completed'
-        : savedProgress == 0.0
-            ? 'Remaining'
-            : 'In Progress';
 
     return PopScope(
       canPop: !vm.isSaving,
@@ -120,105 +117,114 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
 
         // Body start
         body: SafeArea(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 600),
-              child: ListView(
-                padding: const EdgeInsets.all(24),
-                children: [
-                  // Project information section start
-                  Text(
-                    project.name,
-                    style: const TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(project.description),
-                  const SizedBox(height: 20),
-                  Text('Status: $status'),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Due: ${MaterialLocalizations.of(context).formatMediumDate(project.dueDate)}',
-                  ),
-                  const SizedBox(height: 8),
-                  Text('Team members: ${project.memberIds.length}'),
-                  const SizedBox(height: 24),
-                  // Project information section end
+          child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+            stream: projectStream,
+            builder: (context, snapshot) {
+              // Loading aur error section start
+              if (snapshot.hasError) {
+                return const Center(
+                  child: Text('Project load nahi hua.'),
+                );
+              }
 
-                  // Open tasks section start
-                  FilledButton.icon(
-                    onPressed: vm.isSaving
-                        ? null
-                        : () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => TasksScreen(project: project),
-                              ),
-                            );
-                          },
-                    icon: const Icon(Icons.checklist),
-                    label: const Text('Open Tasks'),
-                  ),
-                  const SizedBox(height: 32),
-                  // Open tasks section end
+              if (!snapshot.hasData) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-                  // Progress section start
-                  Text(
-                    'Progress: ${(progress * 100).round()}%',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  LinearProgressIndicator(
-                    value: progress,
-                    minHeight: 10,
-                    color: Colors.green,
-                    backgroundColor: const Color(0xffE8EDF5),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  // Progress section end
+              if (!snapshot.data!.exists) {
+                return const Center(child: Text('Project deleted'));
+              }
+              // Loading aur error section end
 
-                  // Owner controls section start
-                  if (isOwner) ...[
-                    Slider(
-                      value: progress,
-                      divisions: 20,
-                      label: '${(progress * 100).round()}%',
-                      onChanged: vm.isSaving
-                          ? null
-                          : (value) => setState(() => progress = value),
-                    ),
-                    const Text(
-                      '0% = Remaining • 1–99% = In Progress • 100% = Completed',
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    FilledButton(
-                      onPressed: vm.isSaving || progress == savedProgress
-                          ? null
-                          : saveProgress,
-                      child: Text(
-                        vm.isSaving ? 'Please wait...' : 'Save Progress',
+              final project = ProjectModel.fromDoc(snapshot.data!);
+              final isOwner =
+                  FirebaseAuth.instance.currentUser?.uid == project.ownerId;
+
+              return Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 600),
+                  child: ListView(
+                    padding: const EdgeInsets.all(24),
+                    children: [
+                      // Project information section start
+                      Text(
+                        project.name,
+                        style: const TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    OutlinedButton.icon(
-                      onPressed: vm.isSaving ? null : deleteProject,
-                      icon: const Icon(Icons.delete_outline),
-                      label: const Text('Delete Project'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.red,
+                      const SizedBox(height: 12),
+                      Text(project.description),
+                      const SizedBox(height: 20),
+                      Text('Status: ${project.status}'),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Due: ${MaterialLocalizations.of(context).formatMediumDate(project.dueDate)}',
                       ),
-                    ),
-                  ],
-                  // Owner controls section end
-                ],
-              ),
-            ),
+                      const SizedBox(height: 8),
+                      Text('Team members: ${project.memberIds.length}'),
+                      const SizedBox(height: 32),
+                      // Project information section end
+
+                      // Progress section start
+                      Text(
+                        'Progress: ${(project.progress * 100).round()}%',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      LinearProgressIndicator(
+                        value: project.progress.clamp(0.0, 1.0),
+                        minHeight: 10,
+                        color: Colors.green,
+                        backgroundColor: const Color(0xffE8EDF5),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Progress updates automatically when tasks change.',
+                      ),
+                      const SizedBox(height: 24),
+                      // Progress section end
+
+                      // Open tasks section start
+                      FilledButton.icon(
+                        onPressed: vm.isSaving
+                            ? null
+                            : () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        TasksScreen(project: project),
+                                  ),
+                                );
+                              },
+                        icon: const Icon(Icons.checklist),
+                        label: const Text('Open Tasks'),
+                      ),
+                      // Open tasks section end
+
+                      // Delete button section start
+                      if (isOwner) ...[
+                        const SizedBox(height: 16),
+                        OutlinedButton.icon(
+                          onPressed: vm.isSaving ? null : deleteProject,
+                          icon: const Icon(Icons.delete_outline),
+                          label: const Text('Delete Project'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.red,
+                          ),
+                        ),
+                      ],
+                      // Delete button section end
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
         ),
         // Body end

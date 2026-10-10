@@ -16,23 +16,23 @@ class TaskViewModel extends ChangeNotifier {
   }
   // State section end
 
-  // Task add section start
+  // Task actions section start
   Future<bool> addTask(String title) {
     return _run(() => _service.addTask(title));
   }
-  // Task add section end
 
-  // Task complete section start
+  Future<bool> editTask(String id, String title) {
+    return _run(() => _service.editTask(id, title));
+  }
+
   Future<bool> setCompleted(String id, bool value) {
     return _run(() => _service.setCompleted(id, value));
   }
-  // Task complete section end
 
-  // Task delete section start
   Future<bool> deleteTask(String id) {
     return _run(() => _service.deleteTask(id));
   }
-  // Task delete section end
+  // Task actions section end
 
   // Loading aur error section start
   Future<bool> _run(Future<void> Function() action) async {
@@ -46,7 +46,7 @@ class TaskViewModel extends ChangeNotifier {
       await action();
       return true;
     } catch (_) {
-      error = 'Task save nahi hua. Internet aur permissions check karein.';
+      error = 'Task action failed. Internet aur permissions check karein.';
       return false;
     } finally {
       isBusy = false;
@@ -54,4 +54,4 @@ class TaskViewModel extends ChangeNotifier {
     }
   }
   // Loading aur error section end
-} 
+}
