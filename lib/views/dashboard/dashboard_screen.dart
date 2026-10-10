@@ -8,6 +8,7 @@ import '../../viewmodels/project_viewmodel.dart';
 import '../auth/login_screen.dart';
 import '../projects/add_project_screen.dart';
 import '../projects/project_details_screen.dart';
+import '../team/team_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -168,8 +169,16 @@ class _DashboardContentState extends State<_DashboardContent> {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 1000),
                 child: ListView(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: const EdgeInsets.fromLTRB(
+                    20,
+                    20,
+                    20,
+                    100,
+                  ),
                   children: [
+                    // Welcome section
                     Text(
                       'Welcome, $greeting! 👋',
                       style: const TextStyle(
@@ -177,12 +186,16 @@ class _DashboardContentState extends State<_DashboardContent> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+
                     const SizedBox(height: 6),
+
                     const Text(
                       "Here's an overview of your projects.",
                     ),
+
                     const SizedBox(height: 24),
 
+                    // Stats section
                     LayoutBuilder(
                       builder: (context, constraints) {
                         final columns =
@@ -203,7 +216,8 @@ class _DashboardContentState extends State<_DashboardContent> {
                                 child: Card(
                                   margin: EdgeInsets.zero,
                                   child: Padding(
-                                    padding: const EdgeInsets.all(16),
+                                    padding:
+                                        const EdgeInsets.all(16),
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
@@ -218,7 +232,8 @@ class _DashboardContentState extends State<_DashboardContent> {
                                           '${stat.$2}',
                                           style: const TextStyle(
                                             fontSize: 26,
-                                            fontWeight: FontWeight.bold,
+                                            fontWeight:
+                                                FontWeight.bold,
                                           ),
                                         ),
                                       ],
@@ -233,11 +248,13 @@ class _DashboardContentState extends State<_DashboardContent> {
 
                     const SizedBox(height: 20),
 
+                    // Progress overview
                     Card(
                       child: Padding(
                         padding: const EdgeInsets.all(20),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment:
+                              CrossAxisAlignment.start,
                           children: [
                             const Text(
                               'Project Progress Overview',
@@ -246,13 +263,18 @@ class _DashboardContentState extends State<_DashboardContent> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
+
                             const SizedBox(height: 16),
+
                             LinearProgressIndicator(
                               value: ratio,
                               minHeight: 10,
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius:
+                                  BorderRadius.circular(8),
                             ),
+
                             const SizedBox(height: 12),
+
                             Text(
                               '${(ratio * 100).round()}% completed',
                             ),
@@ -263,6 +285,7 @@ class _DashboardContentState extends State<_DashboardContent> {
 
                     const SizedBox(height: 24),
 
+                    // Projects heading
                     const Text(
                       'My Projects',
                       style: TextStyle(
@@ -273,6 +296,7 @@ class _DashboardContentState extends State<_DashboardContent> {
 
                     const SizedBox(height: 12),
 
+                    // Search
                     TextField(
                       controller: searchController,
                       decoration: InputDecoration(
@@ -282,6 +306,8 @@ class _DashboardContentState extends State<_DashboardContent> {
                         suffixIcon: searchController.text.isEmpty
                             ? null
                             : IconButton(
+                                tooltip: 'Clear search',
+                                icon: const Icon(Icons.close),
                                 onPressed: () {
                                   searchController.clear();
 
@@ -289,7 +315,6 @@ class _DashboardContentState extends State<_DashboardContent> {
                                     searchText = '';
                                   });
                                 },
-                                icon: const Icon(Icons.close),
                               ),
                       ),
                       onChanged: (value) {
@@ -302,6 +327,7 @@ class _DashboardContentState extends State<_DashboardContent> {
 
                     const SizedBox(height: 12),
 
+                    // Filters
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
@@ -309,7 +335,8 @@ class _DashboardContentState extends State<_DashboardContent> {
                         for (final filter in filters)
                           ChoiceChip(
                             label: Text(filter),
-                            selected: selectedStatus == filter,
+                            selected:
+                                selectedStatus == filter,
                             onSelected: (_) {
                               setState(() {
                                 selectedStatus = filter;
@@ -322,11 +349,13 @@ class _DashboardContentState extends State<_DashboardContent> {
                     const SizedBox(height: 12),
 
                     Text(
-                      '${filteredProjects.length} of ${projects.length} projects',
+                      '${filteredProjects.length} of '
+                      '${projects.length} projects',
                     ),
 
                     const SizedBox(height: 12),
 
+                    // Empty projects
                     if (filteredProjects.isEmpty)
                       Padding(
                         padding: const EdgeInsets.all(24),
@@ -338,35 +367,41 @@ class _DashboardContentState extends State<_DashboardContent> {
                         ),
                       ),
 
+                    // Project cards
                     for (final project in filteredProjects)
                       Card(
+                        margin:
+                            const EdgeInsets.only(bottom: 12),
                         clipBehavior: Clip.antiAlias,
-                        child: InkWell(
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    ChangeNotifierProvider.value(
-                                  value: vm,
-                                  child: ProjectDetailsScreen(
-                                    project: project,
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.start,
-                              children: [
-                                Row(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment:
+                                CrossAxisAlignment.start,
+                            children: [
+                              InkWell(
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          ChangeNotifierProvider
+                                              .value(
+                                        value: vm,
+                                        child:
+                                            ProjectDetailsScreen(
+                                          project: project,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: Row(
                                   children: [
                                     Expanded(
                                       child: Text(
                                         project.name,
-                                        style: const TextStyle(
+                                        style:
+                                            const TextStyle(
                                           fontSize: 16,
                                           fontWeight:
                                               FontWeight.bold,
@@ -378,24 +413,59 @@ class _DashboardContentState extends State<_DashboardContent> {
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 6),
-                                Text(project.description),
-                                const SizedBox(height: 12),
-                                LinearProgressIndicator(
-                                  value: project.progress
-                                      .clamp(0.0, 1.0),
+                              ),
+
+                              const SizedBox(height: 6),
+
+                              Text(project.description),
+
+                              const SizedBox(height: 12),
+
+                              LinearProgressIndicator(
+                                value: project.progress
+                                    .clamp(0.0, 1.0),
+                              ),
+
+                              const SizedBox(height: 8),
+
+                              Text(
+                                '${project.status} • '
+                                '${(project.progress * 100).round()}%',
+                              ),
+
+                              const SizedBox(height: 4),
+
+                              Text(
+                                'Due: '
+                                '${MaterialLocalizations.of(context).formatMediumDate(project.dueDate)}',
+                              ),
+
+                              const SizedBox(height: 10),
+
+                              // Team button
+                              Align(
+                                alignment:
+                                    Alignment.centerRight,
+                                child: TextButton.icon(
+                                  icon: const Icon(
+                                    Icons.groups_outlined,
+                                  ),
+                                  label:
+                                      const Text('Team'),
+                                  onPressed: () {
+                                    Navigator.of(context)
+                                        .push(
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            TeamScreen(
+                                          project: project,
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  '${project.status} • '
-                                  '${(project.progress * 100).round()}%',
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Due: ${MaterialLocalizations.of(context).formatMediumDate(project.dueDate)}',
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -406,8 +476,12 @@ class _DashboardContentState extends State<_DashboardContent> {
           },
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: auth.isLoading ? null : addProject,
+
+      // Add project button
+      floatingActionButton:
+          FloatingActionButton.extended(
+        onPressed:
+            auth.isLoading ? null : addProject,
         icon: const Icon(Icons.add),
         label: const Text('Add Project'),
       ),

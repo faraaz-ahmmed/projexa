@@ -1,23 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../models/project_model.dart';
 import '../../models/team_member_model.dart';
 import '../../viewmodels/team_viewmodel.dart';
 
 class TeamScreen extends StatelessWidget {
-  const TeamScreen({super.key});
+  final ProjectModel project;
+
+  const TeamScreen({
+    super.key,
+    required this.project,
+  });
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => TeamViewModel(),
-      child: const _TeamContent(),
+      child: _TeamContent(project: project),
     );
   }
 }
 
 class _TeamContent extends StatelessWidget {
-  const _TeamContent();
+  final ProjectModel project;
+
+  const _TeamContent({
+    required this.project,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -25,10 +35,10 @@ class _TeamContent extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Team'),
+        title: Text('${project.name} Team'),
       ),
       body: StreamBuilder<List<TeamMemberModel>>(
-        stream: vm.members,
+        stream: vm.members(project.id),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return const Center(
@@ -73,7 +83,22 @@ class _TeamContent extends StatelessWidget {
                   isThreeLine: true,
                   trailing: IconButton(
                     icon: const Icon(Icons.delete_outline),
-                    onPressed: () => vm.deleteMember(member.id),
+                    onPressed: () async {
+                      final success =
+                          await vm.deleteMember(member.id);
+
+                      if (!context.mounted) return;
+
+                      if (!success) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              vm.error ?? 'Unable to delete member',
+                            ),
+                          ),
+                        );
+                      }
+                    },
                   ),
                 ),
               );
@@ -82,14 +107,20 @@ class _TeamContent extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showAddMember(context),
+        onPressed: () => _showAddMember(
+          context,
+          project.id,
+        ),
         icon: const Icon(Icons.person_add_alt_1),
         label: const Text('Add Member'),
       ),
     );
   }
 
-  void _showAddMember(BuildContext context) {
+  void _showAddMember(
+    BuildContext context,
+    String projectId,
+  ) {
     final vm = context.read<TeamViewModel>();
 
     final nameController = TextEditingController();
@@ -148,7 +179,9 @@ class _TeamContent extends StatelessWidget {
                       ],
                       onChanged: (value) {
                         if (value != null) {
-                          setState(() => role = value);
+                          setState(() {
+                            role = value;
+                          });
                         }
                       },
                     ),
@@ -157,29 +190,50 @@ class _TeamContent extends StatelessWidget {
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(dialogContext),
+                  onPressed: () {
+                    Navigator.pop(dialogContext);
+                  },
                   child: const Text('Cancel'),
                 ),
                 FilledButton(
-                  onPressed: () async {
-                    if (nameController.text.trim().isEmpty ||
-                        emailController.text.trim().isEmpty) {
-                      return;
-                    }
+                  onPressed: vm.isLoading
+                      ? null
+                      : () async {
+                          if (nameController.text.trim().isEmpty ||
+                              emailController.text.trim().isEmpty) {
+                            return;
+                          }
 
-                    final success = await vm.addMember(
-                      name: nameController.text,
-                      email: emailController.text,
-                      role: role,
-                    );
+                          final success = await vm.addMember(
+                            projectId: projectId,
+                            name: nameController.text,
+                            email: emailController.text,
+                            role: role,
+                          );
 
-                    if (!dialogContext.mounted) return;
+                          if (!dialogContext.mounted) return;
 
-                    if (success) {
-                      Navigator.pop(dialogContext);
-                    }
-                  },
-                  child: const Text('Add'),
+                          if (success) {
+                            Navigator.pop(dialogContext);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  vm.error ?? 'Unable to add member',
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                  child: vm.isLoading
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text('Add'),
                 ),
               ],
             );

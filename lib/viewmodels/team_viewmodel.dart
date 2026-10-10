@@ -9,20 +9,25 @@ class TeamViewModel extends ChangeNotifier {
   bool isLoading = false;
   String? error;
 
-  Stream<List<TeamMemberModel>> get members {
-    return _firestore.collection('team_members').snapshots().map(
-      (snapshot) {
-        return snapshot.docs.map((doc) {
-          return TeamMemberModel.fromMap(
-            doc.id,
-            doc.data(),
-          );
-        }).toList();
-      },
-    );
+  // Get members of a specific project
+  Stream<List<TeamMemberModel>> members(String projectId) {
+    return _firestore
+        .collection('team_members')
+        .where('projectId', isEqualTo: projectId)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        return TeamMemberModel.fromMap(
+          doc.id,
+          doc.data(),
+        );
+      }).toList();
+    });
   }
 
+  // Add member to project
   Future<bool> addMember({
+    required String projectId,
     required String name,
     required String email,
     required String role,
@@ -33,8 +38,9 @@ class TeamViewModel extends ChangeNotifier {
       notifyListeners();
 
       await _firestore.collection('team_members').add({
+        'projectId': projectId,
         'name': name.trim(),
-        'email': email.trim(),
+        'email': email.trim().toLowerCase(),
         'role': role,
         'createdAt': FieldValue.serverTimestamp(),
       });
@@ -49,7 +55,21 @@ class TeamViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> deleteMember(String id) async {
-    await _firestore.collection('team_members').doc(id).delete();
+  // Delete member
+  Future<bool> deleteMember(String id) async {
+    try {
+      error = null;
+
+      await _firestore
+          .collection('team_members')
+          .doc(id)
+          .delete();
+
+      return true;
+    } catch (e) {
+      error = e.toString();
+      notifyListeners();
+      return false;
+    }
   }
 }
