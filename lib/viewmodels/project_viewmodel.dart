@@ -16,12 +16,34 @@ class ProjectViewModel extends ChangeNotifier {
   }
   // State section end
 
-  // Project save section start
+  // Project create section start
   Future<bool> addProject({
     required String name,
     required String description,
     required DateTime dueDate,
-  }) async {
+  }) {
+    return _run(() => _service.addProject(
+          name: name,
+          description: description,
+          dueDate: dueDate,
+        ));
+  }
+  // Project create section end
+
+  // Progress update section start
+  Future<bool> updateProgress(String id, double progress) {
+    return _run(() => _service.updateProgress(id, progress));
+  }
+  // Progress update section end
+
+  // Project delete section start
+  Future<bool> deleteProject(String id) {
+    return _run(() => _service.deleteProject(id));
+  }
+  // Project delete section end
+
+  // Loading aur error section start
+  Future<bool> _run(Future<void> Function() action) async {
     if (isSaving) return false;
 
     isSaving = true;
@@ -29,19 +51,15 @@ class ProjectViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _service.addProject(
-        name: name,
-        description: description,
-        dueDate: dueDate,
-      );
+      await action();
       return true;
     } catch (_) {
-      error = 'Project save nahi hua. Internet aur Firestore rules check karein.';
+      error = 'Action failed. Internet aur project permissions check karein.';
       return false;
     } finally {
       isSaving = false;
       notifyListeners();
     }
   }
-  // Project save section end
+  // Loading aur error section end
 }

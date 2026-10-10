@@ -9,7 +9,7 @@ class ProjectService {
   final _auth = FirebaseAuth.instance;
   // Firebase references section end
 
-  // Projects read karne ka section start
+  // Projects read section start
   Stream<List<ProjectModel>> watchProjects() {
     final user = _auth.currentUser;
 
@@ -29,9 +29,9 @@ class ProjectService {
       return projects;
     });
   }
-  // Projects read karne ka section end
+  // Projects read section end
 
-  // Project add karne ka section start
+  // Project create section start
   Future<void> addProject({
     required String name,
     required String description,
@@ -54,5 +54,28 @@ class ProjectService {
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
-  // Project add karne ka section end
+  // Project create section end
+
+  // Progress update section start
+  Future<void> updateProgress(String id, double progress) async {
+    final value = progress.clamp(0.0, 1.0);
+
+    final status = value == 1.0
+        ? 'Completed'
+        : value == 0.0
+            ? 'Remaining'
+            : 'In Progress';
+
+    await _projects.doc(id).update({
+      'progress': value,
+      'status': status,
+    });
+  }
+  // Progress update section end
+
+  // Project delete section start
+  Future<void> deleteProject(String id) async {
+    await _projects.doc(id).delete();
+  }
+  // Project delete section end
 }
