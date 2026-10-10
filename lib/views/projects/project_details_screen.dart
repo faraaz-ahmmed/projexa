@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../models/project_model.dart';
 import '../../viewmodels/project_viewmodel.dart';
+import '../tasks/tasks_screen.dart';
 
 class ProjectDetailsScreen extends StatefulWidget {
   final ProjectModel project;
@@ -31,14 +32,11 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
   }
   // Progress state section end
 
-  // Save progress section start
+  // Progress save section start
   Future<void> saveProgress() async {
     final vm = context.read<ProjectViewModel>();
 
-    final success = await vm.updateProgress(
-      widget.project.id,
-      progress,
-    );
+    final success = await vm.updateProgress(widget.project.id, progress);
 
     if (!mounted) return;
 
@@ -54,9 +52,9 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
       ),
     );
   }
-  // Save progress section end
+  // Progress save section end
 
-  // Delete confirmation section start
+  // Project delete section start
   Future<void> deleteProject() async {
     final vm = context.read<ProjectViewModel>();
 
@@ -64,7 +62,10 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Delete project?'),
-        content: const Text('This project will be permanently deleted.'),
+        content: const Text(
+          'Project delete karne se uski task subcollection automatically '
+          'delete nahi hoti. Filhaal tasks pehle delete karein.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
@@ -92,7 +93,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
       );
     }
   }
-  // Delete confirmation section end
+  // Project delete section end
 
   @override
   Widget build(BuildContext context) {
@@ -143,8 +144,25 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text('Team members: ${project.memberIds.length}'),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 24),
                   // Project information section end
+
+                  // Open tasks section start
+                  FilledButton.icon(
+                    onPressed: vm.isSaving
+                        ? null
+                        : () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => TasksScreen(project: project),
+                              ),
+                            );
+                          },
+                    icon: const Icon(Icons.checklist),
+                    label: const Text('Open Tasks'),
+                  ),
+                  const SizedBox(height: 32),
+                  // Open tasks section end
 
                   // Progress section start
                   Text(
