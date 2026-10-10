@@ -14,72 +14,111 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Provider section start
     return ChangeNotifierProvider(
       create: (_) => ProjectViewModel(),
       child: const _DashboardContent(),
     );
-    // Provider section end
   }
 }
 
-class _DashboardContent extends StatelessWidget {
+class _DashboardContent extends StatefulWidget {
   const _DashboardContent();
+
+  @override
+  State<_DashboardContent> createState() => _DashboardContentState();
+}
+
+class _DashboardContentState extends State<_DashboardContent> {
+  String searchText = '';
+  String selectedStatus = 'All';
+
+  final searchController = TextEditingController();
+
+  static const filters = [
+    'All',
+    'Remaining',
+    'In Progress',
+    'Completed',
+  ];
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> logout() async {
+    final auth = context.read<AuthViewModel>();
+    final success = await auth.logout();
+
+    if (!mounted) return;
+
+    if (success) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => const LoginScreen(),
+        ),
+        (_) => false,
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(auth.error ?? 'Logout failed'),
+        ),
+      );
+    }
+  }
+
+  Future<void> addProject() async {
+    final vm = context.read<ProjectViewModel>();
+
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => ChangeNotifierProvider.value(
+          value: vm,
+          child: const AddProjectScreen(),
+        ),
+      ),
+    );
+
+    if (!mounted || saved != true) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Project created successfully'),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthViewModel>();
     final vm = context.read<ProjectViewModel>();
+
     final name = FirebaseAuth.instance.currentUser?.displayName;
     final greeting = name == null || name.isEmpty ? 'User' : name;
 
     return Scaffold(
-      // AppBar section start
       appBar: AppBar(
         title: const Text('Projexa'),
         actions: [
           IconButton(
             tooltip: 'Logout',
+            onPressed: auth.isLoading ? null : logout,
             icon: const Icon(Icons.logout),
-            onPressed: auth.isLoading
-                ? null
-                : () async {
-                    final success = await auth.logout();
-
-                    if (!context.mounted) return;
-
-                    if (success) {
-                      Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(
-                          builder: (_) => const LoginScreen(),
-                        ),
-                        (_) => false,
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(auth.error ?? 'Logout failed'),
-                        ),
-                      );
-                    }
-                  },
           ),
         ],
       ),
-      // AppBar section end
-
-      // Body start
       body: SafeArea(
         child: StreamBuilder<List<ProjectModel>>(
           stream: vm.projects,
           builder: (context, snapshot) {
-            // Loading aur error section start
             if (snapshot.hasError) {
               return const Center(
                 child: Padding(
                   padding: EdgeInsets.all(24),
                   child: Text(
-                    'Projects load nahi hue. Internet aur Firestore rules check karein.',
+                    'Projects load nahi hue. Internet aur permissions check karein.',
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -87,20 +126,36 @@ class _DashboardContent extends StatelessWidget {
             }
 
             if (!snapshot.hasData) {
-              return const Center(child: CircularProgressIndicator());
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
             }
-            // Loading aur error section end
 
-            // Counts section start
             final projects = snapshot.data!;
+
             final completed =
                 projects.where((p) => p.status == 'Completed').length;
+
             final inProgress =
                 projects.where((p) => p.status == 'In Progress').length;
+
             final remaining =
                 projects.where((p) => p.status == 'Remaining').length;
+
             final ratio =
                 projects.isEmpty ? 0.0 : completed / projects.length;
+
+            final filteredProjects = projects.where((project) {
+              final matchesStatus =
+                  selectedStatus == 'All' ||
+                  project.status == selectedStatus;
+
+              final matchesSearch =
+                  project.name.toLowerCase().contains(searchText) ||
+                  project.description.toLowerCase().contains(searchText);
+
+              return matchesStatus && matchesSearch;
+            }).toList();
 
             final stats = [
               ('Total Projects', projects.length, Colors.blue),
@@ -108,7 +163,6 @@ class _DashboardContent extends StatelessWidget {
               ('In Progress', inProgress, Colors.orange),
               ('Remaining', remaining, Colors.red),
             ];
-            // Counts section end
 
             return Center(
               child: ConstrainedBox(
@@ -116,7 +170,6 @@ class _DashboardContent extends StatelessWidget {
                 child: ListView(
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
                   children: [
-                    // Welcome section start
                     Text(
                       'Welcome, $greeting! 👋',
                       style: const TextStyle(
@@ -125,16 +178,19 @@ class _DashboardContent extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    const Text("Here's an overview of your projects."),
+                    const Text(
+                      "Here's an overview of your projects.",
+                    ),
                     const SizedBox(height: 24),
-                    // Welcome section end
 
-                    // Project cards section start
                     LayoutBuilder(
                       builder: (context, constraints) {
-                        final columns = constraints.maxWidth >= 700 ? 4 : 2;
+                        final columns =
+                            constraints.maxWidth >= 700 ? 4 : 2;
+
                         final width =
-                            (constraints.maxWidth - (columns - 1) * 12) /
+                            (constraints.maxWidth -
+                                    (columns - 1) * 12) /
                                 columns;
 
                         return Wrap(
@@ -145,7 +201,6 @@ class _DashboardContent extends StatelessWidget {
                               SizedBox(
                                 width: width,
                                 child: Card(
-                                  color: Colors.white,
                                   margin: EdgeInsets.zero,
                                   child: Padding(
                                     padding: const EdgeInsets.all(16),
@@ -175,12 +230,10 @@ class _DashboardContent extends StatelessWidget {
                         );
                       },
                     ),
-                    const SizedBox(height: 20),
-                    // Project cards section end
 
-                    // Progress overview section start
+                    const SizedBox(height: 20),
+
                     Card(
-                      color: Colors.white,
                       child: Padding(
                         padding: const EdgeInsets.all(20),
                         child: Column(
@@ -197,20 +250,19 @@ class _DashboardContent extends StatelessWidget {
                             LinearProgressIndicator(
                               value: ratio,
                               minHeight: 10,
-                              color: Colors.green,
-                              backgroundColor: const Color(0xffE8EDF5),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             const SizedBox(height: 12),
-                            Text('${(ratio * 100).round()}% completed'),
+                            Text(
+                              '${(ratio * 100).round()}% completed',
+                            ),
                           ],
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    // Progress overview section end
 
-                    // Projects list section start
+                    const SizedBox(height: 24),
+
                     const Text(
                       'My Projects',
                       style: TextStyle(
@@ -218,24 +270,83 @@ class _DashboardContent extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+
                     const SizedBox(height: 12),
-                    if (projects.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.all(24),
+
+                    TextField(
+                      controller: searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Search projects...',
+                        prefixIcon: const Icon(Icons.search),
+                        border: const OutlineInputBorder(),
+                        suffixIcon: searchController.text.isEmpty
+                            ? null
+                            : IconButton(
+                                onPressed: () {
+                                  searchController.clear();
+
+                                  setState(() {
+                                    searchText = '';
+                                  });
+                                },
+                                icon: const Icon(Icons.close),
+                              ),
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          searchText =
+                              value.trim().toLowerCase();
+                        });
+                      },
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final filter in filters)
+                          ChoiceChip(
+                            label: Text(filter),
+                            selected: selectedStatus == filter,
+                            onSelected: (_) {
+                              setState(() {
+                                selectedStatus = filter;
+                              });
+                            },
+                          ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    Text(
+                      '${filteredProjects.length} of ${projects.length} projects',
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    if (filteredProjects.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.all(24),
                         child: Text(
-                          'No projects yet. Tap Add Project to create one.',
+                          projects.isEmpty
+                              ? 'No projects yet. Tap Add Project.'
+                              : 'No projects match your search or filter.',
                           textAlign: TextAlign.center,
                         ),
                       ),
-                    for (final project in projects)
+
+                    for (final project in filteredProjects)
                       Card(
-                        color: Colors.white,
                         clipBehavior: Clip.antiAlias,
                         child: InkWell(
                           onTap: () {
                             Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (_) => ChangeNotifierProvider.value(
+                                builder: (_) =>
+                                    ChangeNotifierProvider.value(
                                   value: vm,
                                   child: ProjectDetailsScreen(
                                     project: project,
@@ -247,7 +358,8 @@ class _DashboardContent extends StatelessWidget {
                           child: Padding(
                             padding: const EdgeInsets.all(16),
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.start,
                               children: [
                                 Row(
                                   children: [
@@ -256,20 +368,22 @@ class _DashboardContent extends StatelessWidget {
                                         project.name,
                                         style: const TextStyle(
                                           fontSize: 16,
-                                          fontWeight: FontWeight.bold,
+                                          fontWeight:
+                                              FontWeight.bold,
                                         ),
                                       ),
                                     ),
-                                    const Icon(Icons.chevron_right),
+                                    const Icon(
+                                      Icons.chevron_right,
+                                    ),
                                   ],
                                 ),
                                 const SizedBox(height: 6),
                                 Text(project.description),
                                 const SizedBox(height: 12),
                                 LinearProgressIndicator(
-                                  value: project.progress.clamp(0.0, 1.0),
-                                  color: Colors.green,
-                                  backgroundColor: const Color(0xffE8EDF5),
+                                  value: project.progress
+                                      .clamp(0.0, 1.0),
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
@@ -285,7 +399,6 @@ class _DashboardContent extends StatelessWidget {
                           ),
                         ),
                       ),
-                    // Projects list section end
                   ],
                 ),
               ),
@@ -293,34 +406,11 @@ class _DashboardContent extends StatelessWidget {
           },
         ),
       ),
-      // Body end
-
-      // Add project button section start
       floatingActionButton: FloatingActionButton.extended(
+        onPressed: auth.isLoading ? null : addProject,
         icon: const Icon(Icons.add),
         label: const Text('Add Project'),
-        onPressed: auth.isLoading
-            ? null
-            : () async {
-                final saved = await Navigator.of(context).push<bool>(
-                  MaterialPageRoute(
-                    builder: (_) => ChangeNotifierProvider.value(
-                      value: vm,
-                      child: const AddProjectScreen(),
-                    ),
-                  ),
-                );
-
-                if (!context.mounted || saved != true) return;
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Project created successfully'),
-                  ),
-                );
-              },
       ),
-      // Add project button section end
     );
   }
 }

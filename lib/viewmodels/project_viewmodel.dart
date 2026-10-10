@@ -30,11 +30,21 @@ class ProjectViewModel extends ChangeNotifier {
   }
   // Project create section end
 
-  // Progress update section start
-  Future<bool> updateProgress(String id, double progress) {
-    return _run(() => _service.updateProgress(id, progress));
+  // Project edit section start
+  Future<bool> editProject({
+    required String id,
+    required String name,
+    required String description,
+    required DateTime dueDate,
+  }) {
+    return _run(() => _service.editProject(
+          id: id,
+          name: name,
+          description: description,
+          dueDate: dueDate,
+        ));
   }
-  // Progress update section end
+  // Project edit section end
 
   // Project delete section start
   Future<bool> deleteProject(String id) {
@@ -53,8 +63,11 @@ class ProjectViewModel extends ChangeNotifier {
     try {
       await action();
       return true;
+    } on StateError catch (e) {
+      error = e.message.toString();
+      return false;
     } catch (_) {
-      error = 'Action failed. Internet aur project permissions check karein.';
+      error = 'Action failed. Internet aur permissions check karein.';
       return false;
     } finally {
       isSaving = false;

@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../models/project_model.dart';
 import '../../viewmodels/project_viewmodel.dart';
 import '../tasks/tasks_screen.dart';
+import 'edit_project_screen.dart';
 
 class ProjectDetailsScreen extends StatefulWidget {
   final ProjectModel project;
@@ -35,6 +36,27 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
   }
   // Live project section end
 
+  // Edit navigation section start
+  Future<void> editProject(ProjectModel project) async {
+    final vm = context.read<ProjectViewModel>();
+
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => ChangeNotifierProvider.value(
+          value: vm,
+          child: EditProjectScreen(project: project),
+        ),
+      ),
+    );
+
+    if (!mounted || saved != true) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Project updated')),
+    );
+  }
+  // Edit navigation section end
+
   // Project delete section start
   Future<void> deleteProject() async {
     final vm = context.read<ProjectViewModel>();
@@ -44,7 +66,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
       builder: (dialogContext) => AlertDialog(
         title: const Text('Delete project?'),
         content: const Text(
-          'Please delete all tasks before deleting this project.',
+          'Delete all tasks first. This project will be permanently deleted.',
         ),
         actions: [
           TextButton(
@@ -61,41 +83,15 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
 
     if (!mounted || confirmed != true) return;
 
-    try {
-      final tasks = await FirebaseFirestore.instance
-          .collection('projects')
-          .doc(widget.project.id)
-          .collection('tasks')
-          .limit(1)
-          .get(const GetOptions(source: Source.server));
+    final success = await vm.deleteProject(widget.project.id);
 
-      if (!mounted) return;
+    if (!mounted) return;
 
-      if (tasks.docs.isNotEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Open Tasks and delete the tasks first.'),
-          ),
-        );
-        return;
-      }
-
-      final success = await vm.deleteProject(widget.project.id);
-
-      if (!mounted) return;
-
-      if (success) {
-        Navigator.of(context).pop();
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(vm.error ?? 'Delete failed')),
-        );
-      }
-    } catch (_) {
-      if (!mounted) return;
-
+    if (success) {
+      Navigator.of(context).pop();
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not delete project. Try again.')),
+        SnackBar(content: Text(vm.error ?? 'Delete failed')),
       );
     }
   }
@@ -122,9 +118,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
             builder: (context, snapshot) {
               // Loading aur error section start
               if (snapshot.hasError) {
-                return const Center(
-                  child: Text('Project load nahi hua.'),
-                );
+                return const Center(child: Text('Project load nahi hua.'));
               }
 
               if (!snapshot.hasData) {
@@ -207,9 +201,16 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                       ),
                       // Open tasks section end
 
-                      // Delete button section start
+                      // Owner controls section start
                       if (isOwner) ...[
                         const SizedBox(height: 16),
+                        OutlinedButton.icon(
+                          onPressed:
+                              vm.isSaving ? null : () => editProject(project),
+                          icon: const Icon(Icons.edit_outlined),
+                          label: const Text('Edit Project'),
+                        ),
+                        const SizedBox(height: 12),
                         OutlinedButton.icon(
                           onPressed: vm.isSaving ? null : deleteProject,
                           icon: const Icon(Icons.delete_outline),
@@ -219,7 +220,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                           ),
                         ),
                       ],
-                      // Delete button section end
+                      // Owner controls section end
                     ],
                   ),
                 ),

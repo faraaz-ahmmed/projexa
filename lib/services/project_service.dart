@@ -50,31 +50,42 @@ class ProjectService {
       'memberIds': [user.uid],
       'status': 'Remaining',
       'progress': 0.0,
+      'totalTasks': 0,
+      'completedTasks': 0,
+      'taskRevision': 0,
       'dueDate': Timestamp.fromDate(dueDate),
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
   // Project create section end
 
-  // Progress update section start
-  Future<void> updateProgress(String id, double progress) async {
-    final value = progress.clamp(0.0, 1.0);
-
-    final status = value == 1.0
-        ? 'Completed'
-        : value == 0.0
-            ? 'Remaining'
-            : 'In Progress';
-
+  // Project edit section start
+  Future<void> editProject({
+    required String id,
+    required String name,
+    required String description,
+    required DateTime dueDate,
+  }) async {
     await _projects.doc(id).update({
-      'progress': value,
-      'status': status,
+      'name': name.trim(),
+      'description': description.trim(),
+      'dueDate': Timestamp.fromDate(dueDate),
     });
   }
-  // Progress update section end
+  // Project edit section end
 
   // Project delete section start
   Future<void> deleteProject(String id) async {
+    final tasks = await _projects
+        .doc(id)
+        .collection('tasks')
+        .limit(1)
+        .get(const GetOptions(source: Source.server));
+
+    if (tasks.docs.isNotEmpty) {
+      throw StateError('Please delete the project tasks first.');
+    }
+
     await _projects.doc(id).delete();
   }
   // Project delete section end
