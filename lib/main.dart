@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'utils/app_colors.dart';
 import 'viewmodels/auth_viewmodel.dart';
 import 'views/splash/splash_screen.dart';
 
@@ -33,8 +34,9 @@ class ProjexaApp extends StatelessWidget {
         theme: ThemeData(
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF126BFF),
+            seedColor: AppColors.primary,
           ),
+          scaffoldBackgroundColor: AppColors.white,
         ),
         // Theme End
 
