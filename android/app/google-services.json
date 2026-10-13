@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "353480503333",
+    "project_id": "projexa-8788b",
+    "storage_bucket": "projexa-8788b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:353480503333:android:25d7933b3ec2a8f13f4fcc",
+        "android_client_info": {
+          "package_name": "com.example.projrxa"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDsfXSx76c64pr0VfuUU7fv0zdX2rLWKfg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
