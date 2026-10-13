@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../viewmodels/auth_viewmodel.dart';
 import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -13,8 +15,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
-  bool hidePassword = true;
-
   @override
   void dispose() {
     emailController.dispose();
@@ -24,6 +24,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authViewModel = context.watch<AuthViewModel>();
+
     return Scaffold(
       // Body Start
       body: SafeArea(
@@ -85,25 +87,22 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   TextField(
                     controller: passwordController,
-                    obscureText: hidePassword,
+                    obscureText: authViewModel.hidePassword,
                     decoration: InputDecoration(
                       labelText: 'Password',
                       prefixIcon: const Icon(Icons.lock_outline),
                       border: const OutlineInputBorder(),
                       suffixIcon: IconButton(
-                        onPressed: () {
-                          setState(() {
-                            hidePassword = !hidePassword;
-                          });
-                        },
+                        onPressed: authViewModel.togglePassword,
                         icon: Icon(
-                          hidePassword
+                          authViewModel.hidePassword
                               ? Icons.visibility_off_outlined
                               : Icons.visibility_outlined,
                         ),
                       ),
                     ),
                   ),
+                  // Login Form End
 
                   const SizedBox(height: 8),
 
@@ -124,11 +123,21 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: double.infinity,
                     height: 52,
                     child: FilledButton(
-                      onPressed: () {},
-                      child: const Text(
-                        'Login',
-                        style: TextStyle(fontSize: 16),
-                      ),
+                      onPressed: authViewModel.isLoading
+                          ? null
+                          : () {},
+                      child: authViewModel.isLoading
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text(
+                              'Login',
+                              style: TextStyle(fontSize: 16),
+                            ),
                     ),
                   ),
                   // Login Button End

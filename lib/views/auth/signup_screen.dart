@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../viewmodels/auth_viewmodel.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -13,9 +16,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
 
-  bool hidePassword = true;
-  bool hideConfirmPassword = true;
-
   @override
   void dispose() {
     nameController.dispose();
@@ -27,6 +27,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authViewModel = context.watch<AuthViewModel>();
+
     return Scaffold(
       // Body Start
       body: SafeArea(
@@ -100,20 +102,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                   TextField(
                     controller: passwordController,
-                    obscureText: hidePassword,
+                    obscureText: authViewModel.hidePassword,
                     textInputAction: TextInputAction.next,
                     decoration: InputDecoration(
                       labelText: 'Password',
                       prefixIcon: const Icon(Icons.lock_outline),
                       border: const OutlineInputBorder(),
                       suffixIcon: IconButton(
-                        onPressed: () {
-                          setState(() {
-                            hidePassword = !hidePassword;
-                          });
-                        },
+                        onPressed: authViewModel.togglePassword,
                         icon: Icon(
-                          hidePassword
+                          authViewModel.hidePassword
                               ? Icons.visibility_off_outlined
                               : Icons.visibility_outlined,
                         ),
@@ -125,41 +123,49 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                   TextField(
                     controller: confirmPasswordController,
-                    obscureText: hideConfirmPassword,
+                    obscureText: authViewModel.hideConfirmPassword,
                     decoration: InputDecoration(
                       labelText: 'Confirm Password',
                       prefixIcon: const Icon(Icons.lock_outline),
                       border: const OutlineInputBorder(),
                       suffixIcon: IconButton(
-                        onPressed: () {
-                          setState(() {
-                            hideConfirmPassword =
-                                !hideConfirmPassword;
-                          });
-                        },
+                        onPressed:
+                            authViewModel.toggleConfirmPassword,
                         icon: Icon(
-                          hideConfirmPassword
+                          authViewModel.hideConfirmPassword
                               ? Icons.visibility_off_outlined
                               : Icons.visibility_outlined,
                         ),
                       ),
                     ),
                   ),
+                  // Sign Up Form End
 
                   const SizedBox(height: 25),
 
+                  // Sign Up Button Start
                   SizedBox(
                     width: double.infinity,
                     height: 52,
                     child: FilledButton(
-                      onPressed: () {},
-                      child: const Text(
-                        'Sign Up',
-                        style: TextStyle(fontSize: 16),
-                      ),
+                      onPressed: authViewModel.isLoading
+                          ? null
+                          : () {},
+                      child: authViewModel.isLoading
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text(
+                              'Sign Up',
+                              style: TextStyle(fontSize: 16),
+                            ),
                     ),
                   ),
-                  // Sign Up Form End
+                  // Sign Up Button End
 
                   const SizedBox(height: 20),
 
