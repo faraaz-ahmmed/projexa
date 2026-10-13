@@ -1,11 +1,21 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'firebase_options.dart';
 import 'routes/app_routes.dart';
 import 'utils/app_colors.dart';
 import 'viewmodels/auth_viewmodel.dart';
 
-void main() {
+Future<void> main() async {
+  // Firebase Start
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  // Firebase End
+
   runApp(const ProjexaApp());
 }
 

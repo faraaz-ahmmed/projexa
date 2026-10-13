@@ -32,6 +32,42 @@ class _LoginScreenState extends State<LoginScreen> {
   }
   // Email Validation End
 
+  // Login Start
+  Future<void> login() async {
+    if (!formKey.currentState!.validate()) {
+      return;
+    }
+
+    final authViewModel = context.read<AuthViewModel>();
+
+    final success = await authViewModel.login(
+      email: emailController.text.trim(),
+      password: passwordController.text,
+    );
+
+    if (!mounted) return;
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Login successful'),
+        ),
+      );
+
+      // Dashboard navigation will be added later.
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            authViewModel.errorMessage ??
+                'Login failed. Please try again.',
+          ),
+        ),
+      );
+    }
+  }
+  // Login End
+
   @override
   void dispose() {
     emailController.dispose();
@@ -119,6 +155,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           return 'Please enter your password';
                         }
 
+                        if (value.length < 6) {
+                          return 'Password must be at least 6 characters';
+                        }
+
                         return null;
                       },
                       decoration: InputDecoration(
@@ -146,12 +186,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
-                        onPressed: () {
-                          Navigator.pushNamed(
-                            context,
-                            AppRoutes.forgotPassword,
-                          );
-                        },
+                        onPressed: authViewModel.isLoading
+                            ? null
+                            : () {
+                                Navigator.pushNamed(
+                                  context,
+                                  AppRoutes.forgotPassword,
+                                );
+                              },
                         child: const Text(
                           AppStrings.forgotPassword,
                         ),
@@ -166,27 +208,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       width: double.infinity,
                       height: 52,
                       child: FilledButton(
-                        onPressed: authViewModel.isLoading
-                            ? null
-                            : () {
-                                if (formKey.currentState!
-                                    .validate()) {
-                                  ScaffoldMessenger.of(context)
-                                      .showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Login form is valid',
-                                      ),
-                                    ),
-                                  );
-                                }
-                              },
+                        onPressed:
+                            authViewModel.isLoading ? null : login,
                         child: authViewModel.isLoading
                             ? const SizedBox(
                                 width: 22,
                                 height: 22,
-                                child:
-                                    CircularProgressIndicator(
+                                child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                 ),
                               )
@@ -211,12 +239,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           AppStrings.noAccount,
                         ),
                         TextButton(
-                          onPressed: () {
-                            Navigator.pushNamed(
-                              context,
-                              AppRoutes.signUp,
-                            );
-                          },
+                          onPressed: authViewModel.isLoading
+                              ? null
+                              : () {
+                                  Navigator.pushNamed(
+                                    context,
+                                    AppRoutes.signUp,
+                                  );
+                                },
                           child: const Text(
                             AppStrings.signUp,
                           ),

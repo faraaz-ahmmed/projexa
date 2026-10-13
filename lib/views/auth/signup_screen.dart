@@ -33,6 +33,42 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
   // Email Validation End
 
+  // Sign Up Start
+  Future<void> signUp() async {
+    if (!formKey.currentState!.validate()) {
+      return;
+    }
+
+    final authViewModel = context.read<AuthViewModel>();
+
+    final success = await authViewModel.signUp(
+      email: emailController.text.trim(),
+      password: passwordController.text,
+    );
+
+    if (!mounted) return;
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Account created successfully'),
+        ),
+      );
+
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            authViewModel.errorMessage ??
+                'Account creation failed.',
+          ),
+        ),
+      );
+    }
+  }
+  // Sign Up End
+
   @override
   void dispose() {
     nameController.dispose();
@@ -105,12 +141,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           return 'Please enter your full name';
                         }
 
+                        if (value.trim().length < 2) {
+                          return 'Please enter a valid name';
+                        }
+
                         return null;
                       },
                       decoration: const InputDecoration(
                         labelText: 'Full Name',
-                        prefixIcon:
-                            Icon(Icons.person_outline),
+                        prefixIcon: Icon(
+                          Icons.person_outline,
+                        ),
                         border: OutlineInputBorder(),
                       ),
                     ),
@@ -127,8 +168,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       validator: validateEmail,
                       decoration: const InputDecoration(
                         labelText: 'Email',
-                        prefixIcon:
-                            Icon(Icons.email_outlined),
+                        prefixIcon: Icon(
+                          Icons.email_outlined,
+                        ),
                         border: OutlineInputBorder(),
                       ),
                     ),
@@ -155,16 +197,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       },
                       decoration: InputDecoration(
                         labelText: 'Password',
-                        prefixIcon:
-                            const Icon(Icons.lock_outline),
+                        prefixIcon: const Icon(
+                          Icons.lock_outline,
+                        ),
                         border: const OutlineInputBorder(),
                         suffixIcon: IconButton(
                           onPressed:
                               authViewModel.togglePassword,
                           icon: Icon(
                             authViewModel.hidePassword
-                                ? Icons
-                                    .visibility_off_outlined
+                                ? Icons.visibility_off_outlined
                                 : Icons.visibility_outlined,
                           ),
                         ),
@@ -193,8 +235,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       },
                       decoration: InputDecoration(
                         labelText: 'Confirm Password',
-                        prefixIcon:
-                            const Icon(Icons.lock_outline),
+                        prefixIcon: const Icon(
+                          Icons.lock_outline,
+                        ),
                         border: const OutlineInputBorder(),
                         suffixIcon: IconButton(
                           onPressed: authViewModel
@@ -202,8 +245,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           icon: Icon(
                             authViewModel
                                     .hideConfirmPassword
-                                ? Icons
-                                    .visibility_off_outlined
+                                ? Icons.visibility_off_outlined
                                 : Icons.visibility_outlined,
                           ),
                         ),
@@ -218,27 +260,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       width: double.infinity,
                       height: 52,
                       child: FilledButton(
-                        onPressed: authViewModel.isLoading
-                            ? null
-                            : () {
-                                if (formKey.currentState!
-                                    .validate()) {
-                                  ScaffoldMessenger.of(context)
-                                      .showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Sign up form is valid',
-                                      ),
-                                    ),
-                                  );
-                                }
-                              },
+                        onPressed:
+                            authViewModel.isLoading ? null : signUp,
                         child: authViewModel.isLoading
                             ? const SizedBox(
                                 width: 22,
                                 height: 22,
-                                child:
-                                    CircularProgressIndicator(
+                                child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                 ),
                               )
@@ -263,9 +291,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           AppStrings.alreadyHaveAccount,
                         ),
                         TextButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
+                          onPressed: authViewModel.isLoading
+                              ? null
+                              : () {
+                                  Navigator.pop(context);
+                                },
                           child: const Text(
                             AppStrings.login,
                           ),
