@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../auth/login_screen.dart';
+import '../../routes/app_routes.dart';
+import '../../utils/app_colors.dart';
+import '../../utils/app_strings.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -20,11 +22,9 @@ class _SplashScreenState extends State<SplashScreen> {
     Timer(const Duration(seconds: 3), () {
       if (!mounted) return;
 
-      Navigator.pushReplacement(
+      Navigator.pushReplacementNamed(
         context,
-        MaterialPageRoute(
-          builder: (_) => const LoginScreen(),
-        ),
+        AppRoutes.login,
       );
     });
   }
@@ -42,15 +42,14 @@ class _SplashScreenState extends State<SplashScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFF071B4A),
-              Color(0xFF063C9D),
-              Color(0xFF071B4A),
+              AppColors.darkBlue,
+              AppColors.mediumBlue,
+              AppColors.darkBlue,
             ],
           ),
         ),
         child: SafeArea(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Spacer(),
 
@@ -66,9 +65,9 @@ class _SplashScreenState extends State<SplashScreen> {
 
               // App Name Start
               const Text(
-                'Projexa',
+                AppStrings.appName,
                 style: TextStyle(
-                  color: Colors.white,
+                  color: AppColors.white,
                   fontSize: 40,
                   fontWeight: FontWeight.bold,
                 ),
@@ -77,7 +76,7 @@ class _SplashScreenState extends State<SplashScreen> {
               const SizedBox(height: 12),
 
               const Text(
-                'Collaborative Project\nExecution & Tracking Platform',
+                AppStrings.appTagline,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.white70,
@@ -94,7 +93,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 width: 35,
                 height: 35,
                 child: CircularProgressIndicator(
-                  color: Color(0xFF22D3EE),
+                  color: AppColors.secondary,
                   strokeWidth: 3,
                 ),
               ),

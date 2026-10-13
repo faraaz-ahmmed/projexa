@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../utils/app_strings.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -74,7 +75,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                     // Header Start
                     const Text(
-                      'Create Account',
+                      AppStrings.createAccount,
                       style: TextStyle(
                         fontSize: 30,
                         fontWeight: FontWeight.bold,
@@ -84,7 +85,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     const SizedBox(height: 8),
 
                     const Text(
-                      'Create your Projexa account',
+                      AppStrings.signUpSubtitle,
                       style: TextStyle(
                         color: Colors.grey,
                         fontSize: 15,
@@ -99,7 +100,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       controller: nameController,
                       textInputAction: TextInputAction.next,
                       validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
+                        if (value == null ||
+                            value.trim().isEmpty) {
                           return 'Please enter your full name';
                         }
 
@@ -107,7 +109,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       },
                       decoration: const InputDecoration(
                         labelText: 'Full Name',
-                        prefixIcon: Icon(Icons.person_outline),
+                        prefixIcon:
+                            Icon(Icons.person_outline),
                         border: OutlineInputBorder(),
                       ),
                     ),
@@ -118,12 +121,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     // Email Start
                     TextFormField(
                       controller: emailController,
-                      keyboardType: TextInputType.emailAddress,
+                      keyboardType:
+                          TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
                       validator: validateEmail,
                       decoration: const InputDecoration(
                         labelText: 'Email',
-                        prefixIcon: Icon(Icons.email_outlined),
+                        prefixIcon:
+                            Icon(Icons.email_outlined),
                         border: OutlineInputBorder(),
                       ),
                     ),
@@ -134,7 +139,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     // Password Start
                     TextFormField(
                       controller: passwordController,
-                      obscureText: authViewModel.hidePassword,
+                      obscureText:
+                          authViewModel.hidePassword,
                       textInputAction: TextInputAction.next,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -149,13 +155,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       },
                       decoration: InputDecoration(
                         labelText: 'Password',
-                        prefixIcon: const Icon(Icons.lock_outline),
+                        prefixIcon:
+                            const Icon(Icons.lock_outline),
                         border: const OutlineInputBorder(),
                         suffixIcon: IconButton(
-                          onPressed: authViewModel.togglePassword,
+                          onPressed:
+                              authViewModel.togglePassword,
                           icon: Icon(
                             authViewModel.hidePassword
-                                ? Icons.visibility_off_outlined
+                                ? Icons
+                                    .visibility_off_outlined
                                 : Icons.visibility_outlined,
                           ),
                         ),
@@ -168,13 +177,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     // Confirm Password Start
                     TextFormField(
                       controller: confirmPasswordController,
-                      obscureText: authViewModel.hideConfirmPassword,
+                      obscureText:
+                          authViewModel.hideConfirmPassword,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please confirm your password';
                         }
 
-                        if (value != passwordController.text) {
+                        if (value !=
+                            passwordController.text) {
                           return 'Passwords do not match';
                         }
 
@@ -182,14 +193,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       },
                       decoration: InputDecoration(
                         labelText: 'Confirm Password',
-                        prefixIcon: const Icon(Icons.lock_outline),
+                        prefixIcon:
+                            const Icon(Icons.lock_outline),
                         border: const OutlineInputBorder(),
                         suffixIcon: IconButton(
-                          onPressed:
-                              authViewModel.toggleConfirmPassword,
+                          onPressed: authViewModel
+                              .toggleConfirmPassword,
                           icon: Icon(
-                            authViewModel.hideConfirmPassword
-                                ? Icons.visibility_off_outlined
+                            authViewModel
+                                    .hideConfirmPassword
+                                ? Icons
+                                    .visibility_off_outlined
                                 : Icons.visibility_outlined,
                           ),
                         ),
@@ -207,8 +221,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         onPressed: authViewModel.isLoading
                             ? null
                             : () {
-                                if (formKey.currentState!.validate()) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
+                                if (formKey.currentState!
+                                    .validate()) {
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(
                                     const SnackBar(
                                       content: Text(
                                         'Sign up form is valid',
@@ -221,13 +237,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             ? const SizedBox(
                                 width: 22,
                                 height: 22,
-                                child: CircularProgressIndicator(
+                                child:
+                                    CircularProgressIndicator(
                                   strokeWidth: 2,
                                 ),
                               )
                             : const Text(
-                                'Sign Up',
-                                style: TextStyle(fontSize: 16),
+                                AppStrings.signUp,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                ),
                               ),
                       ),
                     ),
@@ -237,14 +256,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                     // Login Navigation Start
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisAlignment:
+                          MainAxisAlignment.center,
                       children: [
-                        const Text('Already have an account?'),
+                        const Text(
+                          AppStrings.alreadyHaveAccount,
+                        ),
                         TextButton(
                           onPressed: () {
                             Navigator.pop(context);
                           },
-                          child: const Text('Login'),
+                          child: const Text(
+                            AppStrings.login,
+                          ),
                         ),
                       ],
                     ),

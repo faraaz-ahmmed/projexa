@@ -63,8 +63,7 @@ class _ForgotPasswordScreenState
                   const SizedBox(height: 10),
 
                   const Text(
-                    'Enter your email address and we will send '
-                    'you a password reset link.',
+                    'Enter your email address and we will send you a password reset link.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.grey,
@@ -76,7 +75,7 @@ class _ForgotPasswordScreenState
 
                   const SizedBox(height: 35),
 
-                  // Email Field Start
+                  // Email Start
                   TextField(
                     controller: emailController,
                     keyboardType: TextInputType.emailAddress,
@@ -86,7 +85,7 @@ class _ForgotPasswordScreenState
                       border: OutlineInputBorder(),
                     ),
                   ),
-                  // Email Field End
+                  // Email End
 
                   const SizedBox(height: 25),
 
@@ -100,7 +99,8 @@ class _ForgotPasswordScreenState
                             emailController.text.trim();
 
                         if (email.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(
                             const SnackBar(
                               content: Text(
                                 'Please enter your email address',
@@ -110,7 +110,8 @@ class _ForgotPasswordScreenState
                           return;
                         }
 
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        ScaffoldMessenger.of(context)
+                            .showSnackBar(
                           const SnackBar(
                             content: Text(
                               'Firebase password reset will be connected soon.',

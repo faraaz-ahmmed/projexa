@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../routes/app_routes.dart';
+import '../../utils/app_strings.dart';
 import '../../viewmodels/auth_viewmodel.dart';
-import 'forgot_password_screen.dart';
-import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,6 +14,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final formKey = GlobalKey<FormState>();
+
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
@@ -71,7 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     // Header Start
                     const Text(
-                      'Welcome Back',
+                      AppStrings.welcomeBack,
                       style: TextStyle(
                         fontSize: 30,
                         fontWeight: FontWeight.bold,
@@ -81,7 +82,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 8),
 
                     const Text(
-                      'Login to continue to Projexa',
+                      AppStrings.loginSubtitle,
                       style: TextStyle(
                         color: Colors.grey,
                         fontSize: 15,
@@ -99,7 +100,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       validator: validateEmail,
                       decoration: const InputDecoration(
                         labelText: 'Email',
-                        prefixIcon: Icon(Icons.email_outlined),
+                        prefixIcon: Icon(
+                          Icons.email_outlined,
+                        ),
                         border: OutlineInputBorder(),
                       ),
                     ),
@@ -120,10 +123,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                       decoration: InputDecoration(
                         labelText: 'Password',
-                        prefixIcon: const Icon(Icons.lock_outline),
+                        prefixIcon: const Icon(
+                          Icons.lock_outline,
+                        ),
                         border: const OutlineInputBorder(),
                         suffixIcon: IconButton(
-                          onPressed: authViewModel.togglePassword,
+                          onPressed:
+                              authViewModel.togglePassword,
                           icon: Icon(
                             authViewModel.hidePassword
                                 ? Icons.visibility_off_outlined
@@ -141,15 +147,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       alignment: Alignment.centerRight,
                       child: TextButton(
                         onPressed: () {
-                          Navigator.push(
+                          Navigator.pushNamed(
                             context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  const ForgotPasswordScreen(),
-                            ),
+                            AppRoutes.forgotPassword,
                           );
                         },
-                        child: const Text('Forgot Password?'),
+                        child: const Text(
+                          AppStrings.forgotPassword,
+                        ),
                       ),
                     ),
                     // Forgot Password End
@@ -164,8 +169,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         onPressed: authViewModel.isLoading
                             ? null
                             : () {
-                                if (formKey.currentState!.validate()) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
+                                if (formKey.currentState!
+                                    .validate()) {
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(
                                     const SnackBar(
                                       content: Text(
                                         'Login form is valid',
@@ -178,13 +185,16 @@ class _LoginScreenState extends State<LoginScreen> {
                             ? const SizedBox(
                                 width: 22,
                                 height: 22,
-                                child: CircularProgressIndicator(
+                                child:
+                                    CircularProgressIndicator(
                                   strokeWidth: 2,
                                 ),
                               )
                             : const Text(
-                                'Login',
-                                style: TextStyle(fontSize: 16),
+                                AppStrings.login,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                ),
                               ),
                       ),
                     ),
@@ -194,19 +204,22 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     // Sign Up Navigation Start
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisAlignment:
+                          MainAxisAlignment.center,
                       children: [
-                        const Text("Don't have an account?"),
+                        const Text(
+                          AppStrings.noAccount,
+                        ),
                         TextButton(
                           onPressed: () {
-                            Navigator.push(
+                            Navigator.pushNamed(
                               context,
-                              MaterialPageRoute(
-                                builder: (_) => const SignUpScreen(),
-                              ),
+                              AppRoutes.signUp,
                             );
                           },
-                          child: const Text('Sign Up'),
+                          child: const Text(
+                            AppStrings.signUp,
+                          ),
                         ),
                       ],
                     ),
