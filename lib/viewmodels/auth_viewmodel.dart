@@ -1,10 +1,13 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../models/user_model.dart';
 import '../services/auth_service.dart';
+import '../services/user_service.dart';
 
 class AuthViewModel extends ChangeNotifier {
   final AuthService _authService = AuthService();
+  final UserService _userService = UserService();
 
   bool _isLoading = false;
   bool _hidePassword = true;
@@ -61,16 +64,34 @@ class AuthViewModel extends ChangeNotifier {
 
   // Sign Up Start
   Future<bool> signUp({
+    required String name,
     required String email,
     required String password,
   }) async {
     _setLoading(true);
 
     try {
-      await _authService.signUp(
+      final result = await _authService.signUp(
         email: email,
         password: password,
       );
+
+      final user = result.user;
+
+      if (user == null) {
+        _errorMessage = 'Unable to create account.';
+        return false;
+      }
+
+      final userModel = UserModel(
+        uid: user.uid,
+        name: name.trim(),
+        email: email.trim(),
+        role: 'member',
+        createdAt: DateTime.now(),
+      );
+
+      await _userService.createUser(userModel);
 
       _errorMessage = null;
       return true;

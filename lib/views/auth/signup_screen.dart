@@ -42,9 +42,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final authViewModel = context.read<AuthViewModel>();
 
     final success = await authViewModel.signUp(
-      email: emailController.text.trim(),
-      password: passwordController.text,
-    );
+  name: nameController.text.trim(),
+  email: emailController.text.trim(),
+  password: passwordController.text,
+);
 
     if (!mounted) return;
 
