@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -7,15 +8,14 @@ import '../models/project_model.dart';
 import '../services/project_service.dart';
 
 class ProjectViewModel extends ChangeNotifier {
-  final ProjectService _projectService =
-      ProjectService();
+  final ProjectService _projectService = ProjectService();
 
-  StreamSubscription<List<ProjectModel>>?
-      _projectSubscription;
+  StreamSubscription<List<ProjectModel>>? _projectSubscription;
 
   List<ProjectModel> _projects = [];
 
   bool _isLoading = false;
+  bool _isCreating = false;
 
   String _selectedFilter = 'All';
 
@@ -26,6 +26,8 @@ class ProjectViewModel extends ChangeNotifier {
 
   bool get isLoading => _isLoading;
 
+  bool get isCreating => _isCreating;
+
   String get selectedFilter => _selectedFilter;
 
   String? get errorMessage => _errorMessage;
@@ -35,8 +37,7 @@ class ProjectViewModel extends ChangeNotifier {
   int get completedProjects {
     return _projects
         .where(
-          (project) =>
-              project.status == 'completed',
+          (project) => project.status == 'completed',
         )
         .length;
   }
@@ -44,8 +45,7 @@ class ProjectViewModel extends ChangeNotifier {
   int get inProgressProjects {
     return _projects
         .where(
-          (project) =>
-              project.status == 'in_progress',
+          (project) => project.status == 'in_progress',
         )
         .length;
   }
@@ -53,8 +53,7 @@ class ProjectViewModel extends ChangeNotifier {
   int get remainingProjects {
     return _projects
         .where(
-          (project) =>
-              project.status == 'remaining',
+          (project) => project.status == 'remaining',
         )
         .length;
   }
@@ -66,24 +65,21 @@ class ProjectViewModel extends ChangeNotifier {
       case 'Completed':
         return _projects
             .where(
-              (project) =>
-                  project.status == 'completed',
+              (project) => project.status == 'completed',
             )
             .toList();
 
       case 'In Progress':
         return _projects
             .where(
-              (project) =>
-                  project.status == 'in_progress',
+              (project) => project.status == 'in_progress',
             )
             .toList();
 
       case 'Remaining':
         return _projects
             .where(
-              (project) =>
-                  project.status == 'remaining',
+              (project) => project.status == 'remaining',
             )
             .toList();
 
@@ -95,13 +91,12 @@ class ProjectViewModel extends ChangeNotifier {
 
   // Load Projects Start
   void loadProjects() {
-    final currentUser =
-        FirebaseAuth.instance.currentUser;
+    final currentUser = FirebaseAuth.instance.currentUser;
 
     if (currentUser == null) {
       _projects = [];
-      _errorMessage =
-          'Please login to view your projects.';
+      _isLoading = false;
+      _errorMessage = 'Please login to view your projects.';
       notifyListeners();
       return;
     }
@@ -124,14 +119,61 @@ class ProjectViewModel extends ChangeNotifier {
       },
       onError: (_) {
         _isLoading = false;
-        _errorMessage =
-            'Unable to load projects.';
+        _errorMessage = 'Unable to load projects.';
 
         notifyListeners();
       },
     );
   }
   // Load Projects End
+
+  // Create Project Start
+  Future<bool> createProject({
+    required String name,
+    required String description,
+    required DateTime dueDate,
+  }) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+
+    if (currentUser == null) {
+      _errorMessage = 'Please login to create a project.';
+      notifyListeners();
+      return false;
+    }
+
+    _isCreating = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final projectId = FirebaseFirestore.instance
+          .collection('projects')
+          .doc()
+          .id;
+
+      final project = ProjectModel(
+        id: projectId,
+        name: name.trim(),
+        description: description.trim(),
+        ownerId: currentUser.uid,
+        status: 'remaining',
+        createdAt: DateTime.now(),
+        dueDate: dueDate,
+      );
+
+      await _projectService.createProject(project);
+
+      _errorMessage = null;
+      return true;
+    } catch (_) {
+      _errorMessage = 'Unable to create project.';
+      return false;
+    } finally {
+      _isCreating = false;
+      notifyListeners();
+    }
+  }
+  // Create Project End
 
   // Change Filter Start
   void changeFilter(String filter) {
@@ -150,14 +192,10 @@ class ProjectViewModel extends ChangeNotifier {
       );
 
       _errorMessage = null;
-
       return true;
     } catch (_) {
-      _errorMessage =
-          'Unable to delete project.';
-
+      _errorMessage = 'Unable to delete project.';
       notifyListeners();
-
       return false;
     }
   }
