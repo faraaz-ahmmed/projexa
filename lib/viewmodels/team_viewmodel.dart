@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -52,10 +53,16 @@ class TeamViewModel extends ChangeNotifier {
 
         notifyListeners();
       },
-      onError: (_) {
+      onError: (error) {
         _isLoading = false;
-        _errorMessage =
-            'Unable to load team members.';
+
+        if (error is FirebaseException) {
+          _errorMessage =
+              'Firebase error: ${error.code} - ${error.message}';
+        } else {
+          _errorMessage =
+              'Unable to load team members.';
+        }
 
         notifyListeners();
       },
@@ -94,10 +101,12 @@ class TeamViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      // Find User Start
       final UserModel? user =
           await _teamService.findUserByEmail(
         cleanEmail,
       );
+      // Find User End
 
       if (user == null) {
         _errorMessage =
@@ -105,12 +114,15 @@ class TeamViewModel extends ChangeNotifier {
         return false;
       }
 
+      // Owner Check Start
       if (user.uid == currentUser.uid) {
         _errorMessage =
-            'Project owner cannot be added as a team member.';
+            'You cannot add yourself as a team member.';
         return false;
       }
+      // Owner Check End
 
+      // Existing Member Check Start
       final alreadyMember =
           await _teamService.isMember(
         projectId: projectId,
@@ -122,7 +134,9 @@ class TeamViewModel extends ChangeNotifier {
             'This user is already a team member.';
         return false;
       }
+      // Existing Member Check End
 
+      // Member Model Start
       final member = ProjectMemberModel(
         uid: user.uid,
         name: user.name,
@@ -130,18 +144,27 @@ class TeamViewModel extends ChangeNotifier {
         role: 'member',
         joinedAt: DateTime.now(),
       );
+      // Member Model End
 
+      // Save Member Start
       await _teamService.addMember(
         projectId: projectId,
         member: member,
       );
+      // Save Member End
 
       _errorMessage = null;
 
       return true;
-    } catch (_) {
+    } on FirebaseException catch (e) {
       _errorMessage =
-          'Unable to add team member.';
+          'Firebase error: ${e.code} - ${e.message}';
+
+      return false;
+    } catch (e) {
+      _errorMessage =
+          'Error: ${e.toString()}';
+
       return false;
     } finally {
       _isAdding = false;
@@ -164,9 +187,16 @@ class TeamViewModel extends ChangeNotifier {
       _errorMessage = null;
 
       return true;
-    } catch (_) {
+    } on FirebaseException catch (e) {
       _errorMessage =
-          'Unable to remove team member.';
+          'Firebase error: ${e.code} - ${e.message}';
+
+      notifyListeners();
+
+      return false;
+    } catch (e) {
+      _errorMessage =
+          'Error: ${e.toString()}';
 
       notifyListeners();
 

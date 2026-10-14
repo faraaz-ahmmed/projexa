@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../models/project_member_model.dart';
 import '../../models/project_model.dart';
 import '../../utils/app_colors.dart';
+import '../../viewmodels/team_viewmodel.dart';
+import '../team/add_member_screen.dart';
 
-class ProjectDetailsScreen extends StatelessWidget {
+class ProjectDetailsScreen extends StatefulWidget {
   final ProjectModel project;
 
   const ProjectDetailsScreen({
@@ -11,21 +15,43 @@ class ProjectDetailsScreen extends StatelessWidget {
     required this.project,
   });
 
+  @override
+  State<ProjectDetailsScreen> createState() =>
+      _ProjectDetailsScreenState();
+}
+
+class _ProjectDetailsScreenState
+    extends State<ProjectDetailsScreen> {
+  // Load Team Start
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<TeamViewModel>().loadMembers(
+            widget.project.id,
+          );
+    });
+  }
+  // Load Team End
+
   // Date Start
   String get formattedDueDate {
-    final day =
-        project.dueDate.day.toString().padLeft(2, '0');
+    final day = widget.project.dueDate.day
+        .toString()
+        .padLeft(2, '0');
 
-    final month =
-        project.dueDate.month.toString().padLeft(2, '0');
+    final month = widget.project.dueDate.month
+        .toString()
+        .padLeft(2, '0');
 
-    return '$day/$month/${project.dueDate.year}';
+    return '$day/$month/${widget.project.dueDate.year}';
   }
   // Date End
 
   // Status Start
   String get statusText {
-    switch (project.status) {
+    switch (widget.project.status) {
       case 'completed':
         return 'Completed';
 
@@ -40,7 +66,7 @@ class ProjectDetailsScreen extends StatelessWidget {
 
   // Progress Start
   double get projectProgress {
-    switch (project.status) {
+    switch (widget.project.status) {
       case 'completed':
         return 1.0;
 
@@ -57,8 +83,103 @@ class ProjectDetailsScreen extends StatelessWidget {
   }
   // Progress End
 
+  // Add Member Start
+  Future<void> openAddMember() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddMemberScreen(
+          projectId: widget.project.id,
+        ),
+      ),
+    );
+  }
+  // Add Member End
+
+  // Remove Member Start
+  Future<void> removeMember(
+    ProjectMemberModel member,
+  ) async {
+    final shouldRemove =
+        await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text(
+            'Remove Member',
+          ),
+          content: Text(
+            'Remove ${member.name} from this project?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(
+                  context,
+                  false,
+                );
+              },
+              child: const Text(
+                'Cancel',
+              ),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.pop(
+                  context,
+                  true,
+                );
+              },
+              child: const Text(
+                'Remove',
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldRemove != true || !mounted) {
+      return;
+    }
+
+    final teamViewModel =
+        context.read<TeamViewModel>();
+
+    final success =
+        await teamViewModel.removeMember(
+      projectId: widget.project.id,
+      userId: member.uid,
+    );
+
+    if (!mounted) return;
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Team member removed.',
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            teamViewModel.errorMessage ??
+                'Unable to remove member.',
+          ),
+        ),
+      );
+    }
+  }
+  // Remove Member End
+
   @override
   Widget build(BuildContext context) {
+    final teamViewModel =
+        context.watch<TeamViewModel>();
+
     return Scaffold(
       // AppBar Start
       appBar: AppBar(
@@ -103,8 +224,8 @@ class ProjectDetailsScreen extends StatelessWidget {
                         width: 60,
                         height: 60,
                         decoration: BoxDecoration(
-                          color:
-                              AppColors.primary.withValues(
+                          color: AppColors.primary
+                              .withValues(
                             alpha: 0.10,
                           ),
                           borderRadius:
@@ -125,7 +246,7 @@ class ProjectDetailsScreen extends StatelessWidget {
                               CrossAxisAlignment.start,
                           children: [
                             Text(
-                              project.name,
+                              widget.project.name,
                               style: const TextStyle(
                                 fontSize: 26,
                                 fontWeight:
@@ -138,7 +259,8 @@ class ProjectDetailsScreen extends StatelessWidget {
 
                             Container(
                               padding:
-                                  const EdgeInsets.symmetric(
+                                  const EdgeInsets
+                                      .symmetric(
                                 horizontal: 12,
                                 vertical: 6,
                               ),
@@ -184,7 +306,7 @@ class ProjectDetailsScreen extends StatelessWidget {
                   const SizedBox(height: 10),
 
                   Text(
-                    project.description,
+                    widget.project.description,
                     style: const TextStyle(
                       color: AppColors.grey,
                       height: 1.6,
@@ -209,8 +331,7 @@ class ProjectDetailsScreen extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: _InfoCard(
-                          icon:
-                              Icons.flag_outlined,
+                          icon: Icons.flag_outlined,
                           title: 'Status',
                           value: statusText,
                         ),
@@ -274,7 +395,7 @@ class ProjectDetailsScreen extends StatelessWidget {
 
                   const SizedBox(height: 30),
 
-                  // Tasks Header Start
+                  // Tasks Start
                   Row(
                     mainAxisAlignment:
                         MainAxisAlignment.spaceBetween,
@@ -297,18 +418,16 @@ class ProjectDetailsScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  // Tasks Header End
 
                   const SizedBox(height: 10),
 
-                  // Tasks Empty Start
                   const _EmptySection(
                     icon: Icons.task_alt_outlined,
                     title: 'No Tasks Yet',
                     message:
                         'Project tasks will appear here.',
                   ),
-                  // Tasks Empty End
+                  // Tasks End
 
                   const SizedBox(height: 30),
 
@@ -317,17 +436,52 @@ class ProjectDetailsScreen extends StatelessWidget {
                     mainAxisAlignment:
                         MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Team',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Row(
+                        children: [
+                          const Text(
+                            'Team',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight:
+                                  FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding:
+                                const EdgeInsets.symmetric(
+                              horizontal: 9,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary
+                                  .withValues(
+                                alpha: 0.10,
+                              ),
+                              borderRadius:
+                                  BorderRadius.circular(
+                                20,
+                              ),
+                            ),
+                            child: Text(
+                              teamViewModel.totalMembers
+                                  .toString(),
+                              style: const TextStyle(
+                                color:
+                                    AppColors.primary,
+                                fontWeight:
+                                    FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
+
                       TextButton.icon(
-                        onPressed: () {},
+                        onPressed: openAddMember,
                         icon: const Icon(
-                          Icons.person_add_alt_1_rounded,
+                          Icons
+                              .person_add_alt_1_rounded,
                         ),
                         label: const Text(
                           'Add Member',
@@ -339,14 +493,52 @@ class ProjectDetailsScreen extends StatelessWidget {
 
                   const SizedBox(height: 10),
 
-                  // Team Empty Start
-                  const _EmptySection(
-                    icon: Icons.group_outlined,
-                    title: 'No Team Members',
-                    message:
-                        'Project team members will appear here.',
-                  ),
-                  // Team Empty End
+                  // Team Members Start
+                  if (teamViewModel.isLoading)
+                    const Center(
+                      child: Padding(
+                        padding:
+                            EdgeInsets.all(30),
+                        child:
+                            CircularProgressIndicator(),
+                      ),
+                    )
+                  else if (teamViewModel
+                      .members.isEmpty)
+                    const _EmptySection(
+                      icon: Icons.group_outlined,
+                      title: 'No Team Members',
+                      message:
+                          'Add registered Projexa users to this project.',
+                    )
+                  else
+                    ListView.separated(
+                      shrinkWrap: true,
+                      physics:
+                          const NeverScrollableScrollPhysics(),
+                      itemCount:
+                          teamViewModel.members.length,
+                      separatorBuilder:
+                          (context, index) {
+                        return const SizedBox(
+                          height: 10,
+                        );
+                      },
+                      itemBuilder:
+                          (context, index) {
+                        final member =
+                            teamViewModel
+                                .members[index];
+
+                        return _MemberCard(
+                          member: member,
+                          onRemove: () {
+                            removeMember(member);
+                          },
+                        );
+                      },
+                    ),
+                  // Team Members End
 
                   const SizedBox(height: 30),
                 ],
@@ -388,9 +580,7 @@ class _InfoCard extends StatelessWidget {
             icon,
             color: AppColors.primary,
           ),
-
           const SizedBox(height: 12),
-
           Text(
             title,
             style: const TextStyle(
@@ -398,9 +588,7 @@ class _InfoCard extends StatelessWidget {
               color: AppColors.grey,
             ),
           ),
-
           const SizedBox(height: 4),
-
           Text(
             value,
             maxLines: 1,
@@ -416,6 +604,128 @@ class _InfoCard extends StatelessWidget {
   }
 }
 // Information Card End
+
+// Team Member Card Start
+class _MemberCard extends StatelessWidget {
+  final ProjectMemberModel member;
+  final VoidCallback onRemove;
+
+  const _MemberCard({
+    required this.member,
+    required this.onRemove,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final firstLetter = member.name.trim().isEmpty
+        ? '?'
+        : member.name
+            .trim()
+            .substring(0, 1)
+            .toUpperCase();
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.lightGrey,
+        ),
+      ),
+      child: Row(
+        children: [
+          // Avatar Start
+          CircleAvatar(
+            radius: 23,
+            backgroundColor:
+                AppColors.primary.withValues(
+              alpha: 0.10,
+            ),
+            child: Text(
+              firstLetter,
+              style: const TextStyle(
+                color: AppColors.primary,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          // Avatar End
+
+          const SizedBox(width: 12),
+
+          // Member Information Start
+          Expanded(
+            child: Column(
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+              children: [
+                Text(
+                  member.name.isEmpty
+                      ? 'Projexa User'
+                      : member.name,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  member.email,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.grey,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Member Information End
+
+          // Role Start
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 5,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(
+                alpha: 0.08,
+              ),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Text(
+              'Member',
+              style: TextStyle(
+                fontSize: 11,
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          // Role End
+
+          const SizedBox(width: 5),
+
+          // Remove Start
+          IconButton(
+            onPressed: onRemove,
+            tooltip: 'Remove Member',
+            icon: const Icon(
+              Icons.delete_outline_rounded,
+              color: AppColors.error,
+            ),
+          ),
+          // Remove End
+        ],
+      ),
+    );
+  }
+}
+// Team Member Card End
 
 // Empty Section Start
 class _EmptySection extends StatelessWidget {
@@ -448,9 +758,7 @@ class _EmptySection extends StatelessWidget {
             size: 38,
             color: AppColors.grey,
           ),
-
           const SizedBox(height: 10),
-
           Text(
             title,
             style: const TextStyle(
@@ -458,9 +766,7 @@ class _EmptySection extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-
           const SizedBox(height: 5),
-
           Text(
             message,
             textAlign: TextAlign.center,
