@@ -48,13 +48,13 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Login successful'),
-        ),
+      // Dashboard Navigation Start
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        AppRoutes.dashboard,
+        (route) => false,
       );
-
-      // Dashboard navigation will be added later.
+      // Dashboard Navigation End
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -89,7 +89,9 @@ class _LoginScreenState extends State<LoginScreen> {
               vertical: 30,
             ),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
+              constraints: const BoxConstraints(
+                maxWidth: 420,
+              ),
 
               // Login Form Start
               child: Form(
@@ -119,6 +121,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const Text(
                       AppStrings.loginSubtitle,
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.grey,
                         fontSize: 15,
@@ -131,8 +134,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     // Email Start
                     TextFormField(
                       controller: emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.next,
+                      keyboardType:
+                          TextInputType.emailAddress,
+                      textInputAction:
+                          TextInputAction.next,
                       validator: validateEmail,
                       decoration: const InputDecoration(
                         labelText: 'Email',
@@ -149,9 +154,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     // Password Start
                     TextFormField(
                       controller: passwordController,
-                      obscureText: authViewModel.hidePassword,
+                      obscureText:
+                          authViewModel.hidePassword,
+                      textInputAction:
+                          TextInputAction.done,
                       validator: (value) {
-                        if (value == null || value.isEmpty) {
+                        if (value == null ||
+                            value.isEmpty) {
                           return 'Please enter your password';
                         }
 
@@ -161,19 +170,30 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         return null;
                       },
+                      onFieldSubmitted: (_) {
+                        if (!authViewModel.isLoading) {
+                          login();
+                        }
+                      },
                       decoration: InputDecoration(
                         labelText: 'Password',
                         prefixIcon: const Icon(
                           Icons.lock_outline,
                         ),
-                        border: const OutlineInputBorder(),
+                        border:
+                            const OutlineInputBorder(),
                         suffixIcon: IconButton(
-                          onPressed:
-                              authViewModel.togglePassword,
+                          onPressed: authViewModel
+                              .isLoading
+                              ? null
+                              : authViewModel
+                                  .togglePassword,
                           icon: Icon(
                             authViewModel.hidePassword
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
+                                ? Icons
+                                    .visibility_off_outlined
+                                : Icons
+                                    .visibility_outlined,
                           ),
                         ),
                       ),
@@ -186,14 +206,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
-                        onPressed: authViewModel.isLoading
-                            ? null
-                            : () {
-                                Navigator.pushNamed(
-                                  context,
-                                  AppRoutes.forgotPassword,
-                                );
-                              },
+                        onPressed:
+                            authViewModel.isLoading
+                                ? null
+                                : () {
+                                    Navigator.pushNamed(
+                                      context,
+                                      AppRoutes
+                                          .forgotPassword,
+                                    );
+                                  },
                         child: const Text(
                           AppStrings.forgotPassword,
                         ),
@@ -209,12 +231,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       height: 52,
                       child: FilledButton(
                         onPressed:
-                            authViewModel.isLoading ? null : login,
+                            authViewModel.isLoading
+                                ? null
+                                : login,
                         child: authViewModel.isLoading
                             ? const SizedBox(
                                 width: 22,
                                 height: 22,
-                                child: CircularProgressIndicator(
+                                child:
+                                    CircularProgressIndicator(
                                   strokeWidth: 2,
                                 ),
                               )
@@ -239,14 +264,16 @@ class _LoginScreenState extends State<LoginScreen> {
                           AppStrings.noAccount,
                         ),
                         TextButton(
-                          onPressed: authViewModel.isLoading
-                              ? null
-                              : () {
-                                  Navigator.pushNamed(
-                                    context,
-                                    AppRoutes.signUp,
-                                  );
-                                },
+                          onPressed:
+                              authViewModel.isLoading
+                                  ? null
+                                  : () {
+                                      Navigator
+                                          .pushNamed(
+                                        context,
+                                        AppRoutes.signUp,
+                                      );
+                                    },
                           child: const Text(
                             AppStrings.signUp,
                           ),

@@ -26,4 +26,20 @@ class UserModel {
     };
   }
   // Firestore Map End
+
+  // Firestore Data Start
+  factory UserModel.fromMap(Map<String, dynamic> map) {
+    final createdAtData = map['createdAt'];
+
+    return UserModel(
+      uid: map['uid']?.toString() ?? '',
+      name: map['name']?.toString() ?? '',
+      email: map['email']?.toString() ?? '',
+      role: map['role']?.toString() ?? 'member',
+      createdAt: createdAtData is Timestamp
+          ? createdAtData.toDate()
+          : DateTime.now(),
+    );
+  }
+  // Firestore Data End
 }

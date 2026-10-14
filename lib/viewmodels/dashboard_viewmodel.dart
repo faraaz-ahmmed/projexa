@@ -1,6 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../services/user_service.dart';
+
 class DashboardViewModel extends ChangeNotifier {
+  final UserService _userService = UserService();
+
   bool _isLoading = false;
 
   String _userName = 'User';
@@ -29,19 +34,34 @@ class DashboardViewModel extends ChangeNotifier {
   }
   // Getters End
 
-  // Loading Start
-  void setLoading(bool value) {
-    _isLoading = value;
-    notifyListeners();
-  }
-  // Loading End
+  // Load Dashboard Start
+  Future<void> loadDashboard() async {
+    _setLoading(true);
 
-  // User Name Start
-  void setUserName(String name) {
-    _userName = name;
-    notifyListeners();
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+
+      if (currentUser == null) {
+        _userName = 'User';
+        return;
+      }
+
+      final user = await _userService.getUser(
+        currentUser.uid,
+      );
+
+      if (user != null && user.name.trim().isNotEmpty) {
+        _userName = user.name;
+      } else {
+        _userName = currentUser.email ?? 'User';
+      }
+    } catch (_) {
+      _userName = 'User';
+    } finally {
+      _setLoading(false);
+    }
   }
-  // User Name End
+  // Load Dashboard End
 
   // Project Summary Start
   void setProjectSummary({
@@ -68,7 +88,15 @@ class DashboardViewModel extends ChangeNotifier {
       return;
     }
 
-    _overallProgress = _completedProjects / _totalProjects;
+    _overallProgress =
+        _completedProjects / _totalProjects;
   }
   // Progress End
+
+  // Loading Start
+  void _setLoading(bool value) {
+    _isLoading = value;
+    notifyListeners();
+  }
+  // Loading End
 }

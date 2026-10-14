@@ -13,4 +13,25 @@ class UserService {
         .set(user.toMap());
   }
   // Create User End
+
+  // Get User Start
+  Future<UserModel?> getUser(String uid) async {
+    final document = await _firestore
+        .collection('users')
+        .doc(uid)
+        .get();
+
+    if (!document.exists) {
+      return null;
+    }
+
+    final data = document.data();
+
+    if (data == null) {
+      return null;
+    }
+
+    return UserModel.fromMap(data);
+  }
+  // Get User End
 }
