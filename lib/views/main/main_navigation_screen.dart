@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../utils/app_colors.dart';
 import '../dashboard/dashboard_screen.dart';
+import '../projects/my_projects_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -18,10 +19,7 @@ class _MainNavigationScreenState
   // Pages Start
   final List<Widget> pages = const [
     DashboardScreen(),
-    _ComingSoonPage(
-      icon: Icons.folder_outlined,
-      title: 'My Projects',
-    ),
+    MyProjectsScreen(),
     _ComingSoonPage(
       icon: Icons.task_alt_outlined,
       title: 'Tasks',
@@ -133,6 +131,7 @@ class _ComingSoonPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // AppBar Start
       appBar: AppBar(
         title: Text(
           title,
@@ -141,6 +140,9 @@ class _ComingSoonPage extends StatelessWidget {
           ),
         ),
       ),
+      // AppBar End
+
+      // Body Start
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -168,6 +170,7 @@ class _ComingSoonPage extends StatelessWidget {
           ],
         ),
       ),
+      // Body End
     );
   }
 }
