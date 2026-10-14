@@ -21,27 +21,27 @@ class _MainNavigationScreenState
     DashboardScreen(),
     MyProjectsScreen(),
     _ComingSoonPage(
-      icon: Icons.task_alt_outlined,
       title: 'Tasks',
+      icon: Icons.task_alt_rounded,
     ),
     _ComingSoonPage(
-      icon: Icons.calendar_month_outlined,
       title: 'Calendar',
+      icon: Icons.calendar_month_rounded,
     ),
     _ComingSoonPage(
-      icon: Icons.person_outline_rounded,
       title: 'Profile',
+      icon: Icons.person_rounded,
     ),
   ];
   // Pages End
 
-  // Navigation Start
+  // Change Page Start
   void changePage(int index) {
     setState(() {
       selectedIndex = index;
     });
   }
-  // Navigation End
+  // Change Page End
 
   @override
   Widget build(BuildContext context) {
@@ -55,12 +55,15 @@ class _MainNavigationScreenState
 
       // Bottom Navigation Start
       bottomNavigationBar: NavigationBar(
+        height: 70,
         selectedIndex: selectedIndex,
         onDestinationSelected: changePage,
+        backgroundColor: AppColors.white,
         indicatorColor: AppColors.primary.withValues(
           alpha: 0.12,
         ),
         destinations: const [
+          // Dashboard Start
           NavigationDestination(
             icon: Icon(
               Icons.dashboard_outlined,
@@ -71,6 +74,9 @@ class _MainNavigationScreenState
             ),
             label: 'Dashboard',
           ),
+          // Dashboard End
+
+          // Projects Start
           NavigationDestination(
             icon: Icon(
               Icons.folder_outlined,
@@ -81,6 +87,9 @@ class _MainNavigationScreenState
             ),
             label: 'Projects',
           ),
+          // Projects End
+
+          // Tasks Start
           NavigationDestination(
             icon: Icon(
               Icons.task_alt_outlined,
@@ -91,6 +100,9 @@ class _MainNavigationScreenState
             ),
             label: 'Tasks',
           ),
+          // Tasks End
+
+          // Calendar Start
           NavigationDestination(
             icon: Icon(
               Icons.calendar_month_outlined,
@@ -101,6 +113,9 @@ class _MainNavigationScreenState
             ),
             label: 'Calendar',
           ),
+          // Calendar End
+
+          // Profile Start
           NavigationDestination(
             icon: Icon(
               Icons.person_outline_rounded,
@@ -111,6 +126,7 @@ class _MainNavigationScreenState
             ),
             label: 'Profile',
           ),
+          // Profile End
         ],
       ),
       // Bottom Navigation End
@@ -120,12 +136,12 @@ class _MainNavigationScreenState
 
 // Coming Soon Page Start
 class _ComingSoonPage extends StatelessWidget {
-  final IconData icon;
   final String title;
+  final IconData icon;
 
   const _ComingSoonPage({
-    required this.icon,
     required this.title,
+    required this.icon,
   });
 
   @override
@@ -149,10 +165,10 @@ class _ComingSoonPage extends StatelessWidget {
           children: [
             Icon(
               icon,
-              size: 65,
+              size: 60,
               color: AppColors.primary,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 15),
             Text(
               title,
               style: const TextStyle(
@@ -160,7 +176,7 @@ class _ComingSoonPage extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 5),
             const Text(
               'Coming Soon',
               style: TextStyle(

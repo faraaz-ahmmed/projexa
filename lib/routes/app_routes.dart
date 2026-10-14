@@ -23,8 +23,13 @@ class AppRoutes {
       splash: (context) => const SplashScreen(),
       login: (context) => const LoginScreen(),
       signUp: (context) => const SignUpScreen(),
-      forgotPassword: (context) => const ForgotPasswordScreen(),
-      dashboard: (context) => const MainNavigationScreen(),
+      forgotPassword: (context) =>
+          const ForgotPasswordScreen(),
+
+      // Main Navigation Start
+      dashboard: (context) =>
+          const MainNavigationScreen(),
+      // Main Navigation End
     };
   }
   // Routes End
