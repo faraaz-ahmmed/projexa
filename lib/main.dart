@@ -8,6 +8,7 @@ import 'utils/app_colors.dart';
 import 'viewmodels/auth_viewmodel.dart';
 import 'viewmodels/dashboard_viewmodel.dart';
 import 'viewmodels/project_viewmodel.dart';
+import 'viewmodels/team_viewmodel.dart';
 
 // Main Start
 Future<void> main() async {
@@ -42,6 +43,9 @@ class ProjexaApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (_) => ProjectViewModel(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => TeamViewModel(),
         ),
       ],
       // Providers End
