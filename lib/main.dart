@@ -7,6 +7,7 @@ import 'routes/app_routes.dart';
 import 'utils/app_colors.dart';
 import 'viewmodels/auth_viewmodel.dart';
 import 'viewmodels/dashboard_viewmodel.dart';
+import 'viewmodels/project_viewmodel.dart';
 
 // Main Start
 Future<void> main() async {
@@ -18,7 +19,9 @@ Future<void> main() async {
   );
   // Firebase End
 
-  runApp(const ProjexaApp());
+  runApp(
+    const ProjexaApp(),
+  );
 }
 // Main End
 
@@ -37,6 +40,9 @@ class ProjexaApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => DashboardViewModel(),
         ),
+        ChangeNotifierProvider(
+          create: (_) => ProjectViewModel(),
+        ),
       ],
       // Providers End
 
@@ -54,7 +60,8 @@ class ProjexaApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(
             seedColor: AppColors.primary,
           ),
-          scaffoldBackgroundColor: AppColors.white,
+          scaffoldBackgroundColor:
+              AppColors.white,
         ),
         // Theme End
       ),
