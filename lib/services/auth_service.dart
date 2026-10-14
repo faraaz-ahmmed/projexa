@@ -5,7 +5,15 @@ class AuthService {
 
   // Current User Start
   User? get currentUser => _auth.currentUser;
+
+  bool get isLoggedIn => _auth.currentUser != null;
   // Current User End
+
+  // Auth State Start
+  Stream<User?> get authStateChanges {
+    return _auth.authStateChanges();
+  }
+  // Auth State End
 
   // Sign Up Start
   Future<UserCredential> signUp({

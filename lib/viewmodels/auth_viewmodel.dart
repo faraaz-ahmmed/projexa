@@ -19,8 +19,12 @@ class AuthViewModel extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get hidePassword => _hidePassword;
   bool get hideConfirmPassword => _hideConfirmPassword;
+
   String? get errorMessage => _errorMessage;
+
   User? get currentUser => _authService.currentUser;
+
+  bool get isLoggedIn => _authService.currentUser != null;
   // Getters End
 
   // Password Visibility Start
@@ -71,10 +75,12 @@ class AuthViewModel extends ChangeNotifier {
     _setLoading(true);
 
     try {
+      // Firebase Authentication Start
       final result = await _authService.signUp(
         email: email,
         password: password,
       );
+      // Firebase Authentication End
 
       final user = result.user;
 
@@ -83,6 +89,7 @@ class AuthViewModel extends ChangeNotifier {
         return false;
       }
 
+      // User Profile Start
       final userModel = UserModel(
         uid: user.uid,
         name: name.trim(),
@@ -90,13 +97,20 @@ class AuthViewModel extends ChangeNotifier {
         role: 'member',
         createdAt: DateTime.now(),
       );
+      // User Profile End
 
+      // Firestore User Start
       await _userService.createUser(userModel);
+      // Firestore User End
 
       _errorMessage = null;
       return true;
     } on FirebaseAuthException catch (e) {
       _errorMessage = _getErrorMessage(e.code);
+      return false;
+    } on FirebaseException catch (e) {
+      _errorMessage =
+          'Database error: ${e.message ?? 'Unable to save user profile.'}';
       return false;
     } catch (_) {
       _errorMessage = 'Something went wrong. Please try again.';
@@ -134,7 +148,15 @@ class AuthViewModel extends ChangeNotifier {
 
   // Logout Start
   Future<void> logout() async {
-    await _authService.logout();
+    try {
+      await _authService.logout();
+      _errorMessage = null;
+    } on FirebaseAuthException catch (e) {
+      _errorMessage = _getErrorMessage(e.code);
+    } catch (_) {
+      _errorMessage = 'Unable to logout. Please try again.';
+    }
+
     notifyListeners();
   }
   // Logout End
