@@ -5,6 +5,7 @@ import '../../models/project_model.dart';
 import '../../utils/app_colors.dart';
 import '../../viewmodels/project_viewmodel.dart';
 import 'create_project_screen.dart';
+import 'project_details_screen.dart';
 
 class MyProjectsScreen extends StatefulWidget {
   const MyProjectsScreen({super.key});
@@ -38,6 +39,22 @@ class _MyProjectsScreenState
     );
   }
   // Open Create Project End
+
+  // Open Project Details Start
+  void openProjectDetails(
+    ProjectModel project,
+  ) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            ProjectDetailsScreen(
+          project: project,
+        ),
+      ),
+    );
+  }
+  // Open Project Details End
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +95,8 @@ class _MyProjectsScreenState
                           'Projects',
                           style: TextStyle(
                             fontSize: 26,
-                            fontWeight: FontWeight.bold,
+                            fontWeight:
+                                FontWeight.bold,
                             color: AppColors.black,
                           ),
                         ),
@@ -267,6 +285,11 @@ class _MyProjectsScreenState
 
                               return _ProjectCard(
                                 project: project,
+                                onTap: () {
+                                  openProjectDetails(
+                                    project,
+                                  );
+                                },
                               );
                             },
                           ),
@@ -402,7 +425,8 @@ class _EmptyProjects extends StatelessWidget {
               color: AppColors.primary.withValues(
                 alpha: 0.10,
               ),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius:
+                  BorderRadius.circular(20),
             ),
             child: const Icon(
               Icons.folder_open_rounded,
@@ -410,7 +434,9 @@ class _EmptyProjects extends StatelessWidget {
               color: AppColors.primary,
             ),
           ),
+
           const SizedBox(height: 18),
+
           const Text(
             'No Projects Yet',
             style: TextStyle(
@@ -418,7 +444,9 @@ class _EmptyProjects extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
+
           const SizedBox(height: 8),
+
           const Text(
             'Create your first project and start collaborating with your team.',
             textAlign: TextAlign.center,
@@ -427,7 +455,9 @@ class _EmptyProjects extends StatelessWidget {
               height: 1.5,
             ),
           ),
+
           const SizedBox(height: 22),
+
           FilledButton.icon(
             onPressed: onCreate,
             icon: const Icon(
@@ -447,9 +477,11 @@ class _EmptyProjects extends StatelessWidget {
 // Project Card Start
 class _ProjectCard extends StatelessWidget {
   final ProjectModel project;
+  final VoidCallback onTap;
 
   const _ProjectCard({
     required this.project,
+    required this.onTap,
   });
 
   String get formattedDate {
@@ -477,89 +509,116 @@ class _ProjectCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppColors.white,
+    return Material(
+      color: AppColors.white,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.lightGrey,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 45,
-                height: 45,
-                decoration: BoxDecoration(
-                  color:
-                      AppColors.primary.withValues(
-                    alpha: 0.10,
-                  ),
-                  borderRadius:
-                      BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.folder_rounded,
-                  color: AppColors.primary,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  project.name,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 14),
-
-          Text(
-            project.description,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: AppColors.grey,
-              height: 1.4,
+        child: Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            borderRadius:
+                BorderRadius.circular(16),
+            border: Border.all(
+              color: AppColors.lightGrey,
             ),
           ),
-
-          const SizedBox(height: 16),
-
-          Row(
+          child: Column(
+            crossAxisAlignment:
+                CrossAxisAlignment.start,
             children: [
-              const Icon(
-                Icons.calendar_month_outlined,
-                size: 18,
-                color: AppColors.grey,
+              // Project Header Start
+              Row(
+                children: [
+                  Container(
+                    width: 45,
+                    height: 45,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary
+                          .withValues(
+                        alpha: 0.10,
+                      ),
+                      borderRadius:
+                          BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.folder_rounded,
+                      color: AppColors.primary,
+                    ),
+                  ),
+
+                  const SizedBox(width: 12),
+
+                  Expanded(
+                    child: Text(
+                      project.name,
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight:
+                            FontWeight.bold,
+                      ),
+                    ),
+                  ),
+
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.grey,
+                  ),
+                ],
               ),
-              const SizedBox(width: 6),
+              // Project Header End
+
+              const SizedBox(height: 14),
+
+              // Description Start
               Text(
-                'Due: $formattedDate',
+                project.description,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: AppColors.grey,
+                  height: 1.4,
                 ),
               ),
-              const Spacer(),
-              Text(
-                statusText,
-                style: const TextStyle(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
-                ),
+              // Description End
+
+              const SizedBox(height: 16),
+
+              // Project Footer Start
+              Row(
+                children: [
+                  const Icon(
+                    Icons.calendar_month_outlined,
+                    size: 18,
+                    color: AppColors.grey,
+                  ),
+
+                  const SizedBox(width: 6),
+
+                  Text(
+                    'Due: $formattedDate',
+                    style: const TextStyle(
+                      color: AppColors.grey,
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  Text(
+                    statusText,
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontWeight:
+                          FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
+              // Project Footer End
             ],
           ),
-        ],
+        ),
       ),
     );
   }
