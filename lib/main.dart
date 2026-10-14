@@ -1,43 +1,64 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-class UserModel {
-  final String uid;
-  final String name;
-  final String email;
-  final String role;
-  final DateTime createdAt;
+import 'firebase_options.dart';
+import 'routes/app_routes.dart';
+import 'utils/app_colors.dart';
+import 'viewmodels/auth_viewmodel.dart';
+import 'viewmodels/dashboard_viewmodel.dart';
 
-  UserModel({
-    required this.uid,
-    required this.name,
-    required this.email,
-    required this.role,
-    required this.createdAt,
-  });
+// Main Start
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-  // Firestore Map Start
-  Map<String, dynamic> toMap() {
-    return {
-      'uid': uid,
-      'name': name,
-      'email': email,
-      'role': role,
-      'createdAt': Timestamp.fromDate(createdAt),
-    };
-  }
-  // Firestore Map End
+  // Firebase Start
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  // Firebase End
 
-  // Firestore Data Start
-  factory UserModel.fromMap(Map<String, dynamic> map) {
-    return UserModel(
-      uid: map['uid'] ?? '',
-      name: map['name'] ?? '',
-      email: map['email'] ?? '',
-      role: map['role'] ?? 'member',
-      createdAt: map['createdAt'] is Timestamp
-          ? (map['createdAt'] as Timestamp).toDate()
-          : DateTime.now(),
+  runApp(const ProjexaApp());
+}
+// Main End
+
+// Projexa App Start
+class ProjexaApp extends StatelessWidget {
+  const ProjexaApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
+      // Providers Start
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => AuthViewModel(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => DashboardViewModel(),
+        ),
+      ],
+      // Providers End
+
+      child: MaterialApp(
+        // App Settings Start
+        debugShowCheckedModeBanner: false,
+        title: 'Projexa',
+        initialRoute: AppRoutes.splash,
+        routes: AppRoutes.routes,
+        // App Settings End
+
+        // Theme Start
+        theme: ThemeData(
+          useMaterial3: true,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: AppColors.primary,
+          ),
+          scaffoldBackgroundColor: AppColors.white,
+        ),
+        // Theme End
+      ),
     );
   }
-  // Firestore Data End
 }
+// Projexa App End

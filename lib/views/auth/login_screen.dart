@@ -48,13 +48,11 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (success) {
-      // Dashboard Navigation Start
       Navigator.pushNamedAndRemoveUntil(
         context,
         AppRoutes.dashboard,
         (route) => false,
       );
-      // Dashboard Navigation End
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -134,10 +132,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     // Email Start
                     TextFormField(
                       controller: emailController,
-                      keyboardType:
-                          TextInputType.emailAddress,
-                      textInputAction:
-                          TextInputAction.next,
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
                       validator: validateEmail,
                       decoration: const InputDecoration(
                         labelText: 'Email',
@@ -154,13 +150,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     // Password Start
                     TextFormField(
                       controller: passwordController,
-                      obscureText:
-                          authViewModel.hidePassword,
-                      textInputAction:
-                          TextInputAction.done,
+                      obscureText: authViewModel.hidePassword,
+                      textInputAction: TextInputAction.done,
                       validator: (value) {
-                        if (value == null ||
-                            value.isEmpty) {
+                        if (value == null || value.isEmpty) {
                           return 'Please enter your password';
                         }
 
@@ -180,20 +173,15 @@ class _LoginScreenState extends State<LoginScreen> {
                         prefixIcon: const Icon(
                           Icons.lock_outline,
                         ),
-                        border:
-                            const OutlineInputBorder(),
+                        border: const OutlineInputBorder(),
                         suffixIcon: IconButton(
-                          onPressed: authViewModel
-                              .isLoading
+                          onPressed: authViewModel.isLoading
                               ? null
-                              : authViewModel
-                                  .togglePassword,
+                              : authViewModel.togglePassword,
                           icon: Icon(
                             authViewModel.hidePassword
-                                ? Icons
-                                    .visibility_off_outlined
-                                : Icons
-                                    .visibility_outlined,
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
                           ),
                         ),
                       ),
@@ -206,16 +194,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
-                        onPressed:
-                            authViewModel.isLoading
-                                ? null
-                                : () {
-                                    Navigator.pushNamed(
-                                      context,
-                                      AppRoutes
-                                          .forgotPassword,
-                                    );
-                                  },
+                        onPressed: authViewModel.isLoading
+                            ? null
+                            : () {
+                                Navigator.pushNamed(
+                                  context,
+                                  AppRoutes.forgotPassword,
+                                );
+                              },
                         child: const Text(
                           AppStrings.forgotPassword,
                         ),
@@ -231,15 +217,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       height: 52,
                       child: FilledButton(
                         onPressed:
-                            authViewModel.isLoading
-                                ? null
-                                : login,
+                            authViewModel.isLoading ? null : login,
                         child: authViewModel.isLoading
                             ? const SizedBox(
                                 width: 22,
                                 height: 22,
-                                child:
-                                    CircularProgressIndicator(
+                                child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                 ),
                               )
@@ -257,23 +240,20 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     // Sign Up Navigation Start
                     Row(
-                      mainAxisAlignment:
-                          MainAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Text(
                           AppStrings.noAccount,
                         ),
                         TextButton(
-                          onPressed:
-                              authViewModel.isLoading
-                                  ? null
-                                  : () {
-                                      Navigator
-                                          .pushNamed(
-                                        context,
-                                        AppRoutes.signUp,
-                                      );
-                                    },
+                          onPressed: authViewModel.isLoading
+                              ? null
+                              : () {
+                                  Navigator.pushNamed(
+                                    context,
+                                    AppRoutes.signUp,
+                                  );
+                                },
                           child: const Text(
                             AppStrings.signUp,
                           ),
