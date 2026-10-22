@@ -5,116 +5,192 @@ import '../../routes/app_routes.dart';
 import '../../utils/app_colors.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen
+    extends StatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  State<SplashScreen> createState() =>
+      _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
-  // Splash Start
+class _SplashScreenState
+    extends State<SplashScreen> {
+  // Session Check Start
   @override
   void initState() {
     super.initState();
-    startSplash();
+
+    checkSession();
   }
 
-  Future<void> startSplash() async {
+  Future<void> checkSession() async {
     await Future.delayed(
-      const Duration(seconds: 2),
+      const Duration(
+        seconds: 2,
+      ),
     );
 
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
 
-    final authViewModel = context.read<AuthViewModel>();
+    final authViewModel =
+        context.read<AuthViewModel>();
 
-    if (authViewModel.isLoggedIn) {
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        AppRoutes.dashboard,
-        (route) => false,
-      );
-    } else {
-      Navigator.pushNamedAndRemoveUntil(
+    // Not Logged In Start
+    if (!authViewModel.isLoggedIn) {
+      Navigator
+          .pushNamedAndRemoveUntil(
         context,
         AppRoutes.login,
         (route) => false,
       );
+
+      return;
     }
+    // Not Logged In End
+
+    final user =
+        await authViewModel
+            .loadUserProfile();
+
+    if (!mounted) {
+      return;
+    }
+
+    if (user == null) {
+      await authViewModel.logout();
+
+      if (!mounted) {
+        return;
+      }
+
+      Navigator
+          .pushNamedAndRemoveUntil(
+        context,
+        AppRoutes.login,
+        (route) => false,
+      );
+
+      return;
+    }
+
+    // Owner Start
+    if (user.role == 'owner' &&
+        user.accountStatus ==
+            'approved') {
+      Navigator
+          .pushNamedAndRemoveUntil(
+        context,
+        AppRoutes.dashboard,
+        (route) => false,
+      );
+
+      return;
+    }
+    // Owner End
+
+    // Pending Start
+    if (user.accountStatus ==
+        'pending') {
+      Navigator
+          .pushNamedAndRemoveUntil(
+        context,
+        AppRoutes
+            .pendingApproval,
+        (route) => false,
+      );
+
+      return;
+    }
+    // Pending End
+
+    // Member Start
+    if (user.role == 'member' &&
+        user.accountStatus ==
+            'approved') {
+      Navigator
+          .pushNamedAndRemoveUntil(
+        context,
+        AppRoutes.memberHome,
+        (route) => false,
+      );
+
+      return;
+    }
+    // Member End
+
+    // Rejected / Invalid Start
+    await authViewModel.logout();
+
+    if (!mounted) {
+      return;
+    }
+
+    Navigator.pushNamedAndRemoveUntil(
+      context,
+      AppRoutes.login,
+      (route) => false,
+    );
+    // Rejected / Invalid End
   }
-  // Splash End
+  // Session Check End
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Body Start
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppColors.darkBlue,
-              AppColors.mediumBlue,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Logo Start
-                Image.asset(
-                  'assets/icons/projexa_icon.png',
-                  width: 130,
-                  height: 130,
-                ),
-                // Logo End
-
-                const SizedBox(height: 24),
-
-                // App Name Start
-                const Text(
-                  'Projexa',
-                  style: TextStyle(
-                    color: AppColors.white,
-                    fontSize: 38,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                // App Name End
-
-                const SizedBox(height: 10),
-
-                // Tagline Start
-                const Text(
-                  'Collaborative Project\nExecution & Tracking Platform',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: AppColors.white,
-                    fontSize: 15,
-                    height: 1.5,
-                  ),
-                ),
-                // Tagline End
-
-                const SizedBox(height: 35),
-
-                // Loading Start
-                const CircularProgressIndicator(
-                  color: AppColors.white,
-                ),
-                // Loading End
-              ],
+      backgroundColor:
+          AppColors.white,
+      body: Center(
+        child: Column(
+          mainAxisAlignment:
+              MainAxisAlignment.center,
+          children: [
+            // Logo Start
+            SizedBox(
+              width: 120,
+              height: 120,
+              child: Image.asset(
+                'assets/icons/projexa_icon.png',
+              ),
             ),
-          ),
+            // Logo End
+
+            const SizedBox(
+              height: 20,
+            ),
+
+            // App Name Start
+            const Text(
+              'Projexa',
+              style: TextStyle(
+                fontSize: 30,
+                fontWeight:
+                    FontWeight.bold,
+                color:
+                    AppColors.darkBlue,
+              ),
+            ),
+            // App Name End
+
+            const SizedBox(
+              height: 25,
+            ),
+
+            // Loading Start
+            const SizedBox(
+              width: 25,
+              height: 25,
+              child:
+                  CircularProgressIndicator(
+                strokeWidth: 2.5,
+              ),
+            ),
+            // Loading End
+          ],
         ),
       ),
-      // Body End
     );
   }
 }
