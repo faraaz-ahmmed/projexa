@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/app_colors.dart';
+import '../../core/input_style.dart';
 import '../../viewmodels/login_viewmodel.dart';
+import 'signup_view.dart';
 
 class LoginView extends StatelessWidget {
   const LoginView({super.key});
@@ -44,12 +46,12 @@ class LoginView extends StatelessWidget {
               const SizedBox(height: 24),
               TextField(
                 keyboardType: TextInputType.emailAddress,
-                decoration: _inputStyle('Email address', Icons.email_outlined),
+                decoration: inputStyle('Email address', Icons.email_outlined),
               ),
               const SizedBox(height: 16),
               TextField(
                 obscureText: viewModel.isPasswordHidden,
-                decoration: _inputStyle(
+                decoration: inputStyle(
                   'Password',
                   Icons.lock_outline,
                   suffix: IconButton(
@@ -83,7 +85,10 @@ class LoginView extends StatelessWidget {
                     style: TextStyle(color: Colors.white70),
                   ),
                   TextButton(
-                    onPressed: () {},
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SignUpView()),
+                    ),
                     child: const Text('Sign Up'),
                   ),
                 ],
@@ -91,20 +96,6 @@ class LoginView extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  InputDecoration _inputStyle(String hint, IconData icon, {Widget? suffix}) {
-    return InputDecoration(
-      hintText: hint,
-      prefixIcon: Icon(icon),
-      suffixIcon: suffix,
-      filled: true,
-      fillColor: Colors.white,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide.none,
       ),
     );
   }
