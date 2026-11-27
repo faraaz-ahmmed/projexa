@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/app_colors.dart';
 import '../../core/input_style.dart';
 import '../../viewmodels/login_viewmodel.dart';
+import '../main/main_view.dart';
 import 'signup_view.dart';
 
 class LoginView extends StatelessWidget {
@@ -73,7 +74,10 @@ class LoginView extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               ElevatedButton(
-                onPressed: () {},
+                onPressed: () => Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const MainView()),
+                ),
                 child: const Text('Login'),
               ),
               const SizedBox(height: 24),
